@@ -21,17 +21,31 @@ FetchContent_MakeAvailable(googletest)
 set(SYSTEMC_INCLUDE /opt/systemc/include) 
 set(SYSTEMC_AMS_INCLUDE /opt/systemc-ams/include) 
 
-add_executable(dram-example
-    examples/dram-example.cpp
+add_executable(dram-fta-example
+    examples/dram-fta-example.cpp
 )
 
-target_include_directories(dram-example
+target_include_directories(dram-fta-example
     PRIVATE ${SYSTEMC_INCLUDE}
 )
 
-target_link_libraries(dram-example
+target_link_libraries(dram-fta-example
     PRIVATE ${SYSTEMC_LIBRARY}
 )
+
+add_executable(dram-metrics-example
+    examples/dram-metrics-example.cpp
+)
+
+target_include_directories(dram-metrics-example
+    PRIVATE ${SYSTEMC_INCLUDE}
+)
+
+target_link_libraries(dram-metrics-example
+    PRIVATE ${SYSTEMC_LIBRARY}
+)
+
+
 
 enable_testing()
 

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <systemc.h>
 #include "../sc_fta.h"
+#include "../sc_hw_metrics.h"
 
 TEST(prob, and) {
     sc_fta::prob a(0.5);
@@ -139,6 +140,55 @@ TEST(cft, hierarchy) {
     sc_start();
 
     EXPECT_EQ(s3.read(), 0.75);
+}
+
+// Hardware Metrics:
+
+TEST(hw_metric, coverage) {
+    sc_signal<double> i("i",100.0);
+    sc_signal<double> o1("o1");
+
+    sc_hw_metrics::coverage m("m", 0.83);
+
+    m.input.bind(i);
+    m.output.bind(o1);
+
+    sc_start();
+
+    EXPECT_DOUBLE_EQ(o1.read(), 17.0);
+}
+
+TEST(hw_metric, split) {
+    sc_signal<double> i("i",100.0);
+    sc_signal<double> o1("o1");
+    sc_signal<double> o2("o2");
+
+    sc_hw_metrics::split s("s");
+
+    s.input.bind(i);
+    s.outputs.bind(o1, 0.87);
+    s.outputs.bind(o2, 0.13);
+
+    sc_start();
+
+    EXPECT_DOUBLE_EQ(o1.read(), 87.0);
+    EXPECT_DOUBLE_EQ(o2.read(), 13.0);
+}
+
+TEST(hw_metric, sum) {
+    sc_signal<double> i1("i1", 10.0);
+    sc_signal<double> i2("i2", 10.0);
+    sc_signal<double> o("o");
+
+    sc_hw_metrics::sum s("sum");
+
+    s.inputs.bind(i1);
+    s.inputs.bind(i2);
+    s.output.bind(o);
+
+    sc_start();
+
+    EXPECT_DOUBLE_EQ(o.read(), 20.0);
 }
 
 int sc_main(int argc, char* argv[])
