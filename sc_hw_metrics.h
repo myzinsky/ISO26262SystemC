@@ -95,13 +95,19 @@ namespace sc_hw_metrics {
         }
 
         // Could be used to calculate unseen dormant faults (safe faults)
-        //void before_end_of_elaboration() {
-        //    double total_rate;
-        //    for (auto& n : outputs.split_rates) {
-        //        total_rate += n;
-        //    }
-        //    sc_assert(total_rate == 1.0);
-        //}
+        void before_end_of_elaboration() {
+            double total_rate;
+            
+            for (auto& n : outputs.split_rates) {
+                total_rate += n;
+            }
+
+            if(total_rate > 1.0)
+            {
+                std::cout << this->name() << " " << total_rate << " ";
+                SC_REPORT_FATAL("SPLIT", "Total Rate Grater than 100%");
+            }
+        }
 
     };
 

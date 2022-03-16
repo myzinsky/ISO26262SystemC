@@ -120,7 +120,7 @@ SC_MODULE(DRAM_SEC_TRIM)
         res_dbe_split.outputs.bind(s2, 0.11);
         res_dbe_split.outputs.bind(s3, 0.89);
 
-        res_tbe_split.outputs.bind(s4, 0.09);
+        res_tbe_split.outputs.bind(s4, 0.009);
         res_tbe_split.outputs.bind(s5, 0.15);
         res_tbe_split.outputs.bind(s6, 0.83);
 
