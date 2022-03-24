@@ -144,18 +144,33 @@ TEST(cft, hierarchy) {
 
 // Hardware Metrics:
 
+TEST(hw_metric, basic_event) {
+    sc_signal<double> o("o");
+
+    sc_hw_metrics::basic_event e("e", 100.0);
+
+    e.output.bind(o);
+
+    sc_start();
+
+    EXPECT_DOUBLE_EQ(o.read(), 100.0);
+}
+
 TEST(hw_metric, coverage) {
     sc_signal<double> i("i",100.0);
-    sc_signal<double> o1("o1");
+    sc_signal<double> o("o");
+    sc_signal<double> l("l");
 
     sc_hw_metrics::coverage m("m", 0.83);
 
     m.input.bind(i);
-    m.output.bind(o1);
+    m.output.bind(o);
+    m.latent.bind(l);
 
     sc_start();
 
-    EXPECT_DOUBLE_EQ(o1.read(), 17.0);
+    EXPECT_DOUBLE_EQ(o.read(), 17.0);
+    EXPECT_DOUBLE_EQ(l.read(), 83.0);
 }
 
 TEST(hw_metric, split) {

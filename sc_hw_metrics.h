@@ -39,7 +39,25 @@
 
 namespace sc_hw_metrics {
 
-    SC_MODULE(coverage) {
+    SC_MODULE(basic_event)
+    {
+        sc_out<double> output;
+        double rate;
+
+        SC_HAS_PROCESS(basic_event);
+        basic_event(sc_module_name name, double rate) : output("output"),
+                                                        rate(rate)
+        {
+            SC_METHOD(compute_fit);
+        }
+
+        void compute_fit() {
+            output.write(rate);
+        }
+    };
+
+    SC_MODULE(coverage)
+    {
         sc_in<double> input;
         sc_out<double> output;
         sc_port<sc_signal_inout_if<double>, 0, SC_ZERO_OR_MORE_BOUND> latent;
@@ -83,7 +101,8 @@ namespace sc_hw_metrics {
         }
     };
 
-    SC_MODULE(split) {
+    SC_MODULE(split)
+    {
         sc_in<double> input;
         sc_split_out<double> outputs;
 
@@ -116,7 +135,8 @@ namespace sc_hw_metrics {
 
     };
 
-    SC_MODULE(sum) {
+    SC_MODULE(sum)
+    {
         sc_port<sc_signal_in_if<double>, 0, SC_ONE_OR_MORE_BOUND> inputs;
         sc_out<double> output;
 
@@ -134,7 +154,8 @@ namespace sc_hw_metrics {
         }
     };
 
-    SC_MODULE(pass) {
+    SC_MODULE(pass)
+    {
         sc_in<double> input;
         sc_out<double> output;
 
@@ -148,7 +169,8 @@ namespace sc_hw_metrics {
         }
     };
 
-    SC_MODULE(asil) {
+    SC_MODULE(asil)
+    {
         sc_in<double> residual;
         sc_in<double> latent;
 
