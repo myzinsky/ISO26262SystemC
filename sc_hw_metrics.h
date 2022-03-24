@@ -129,6 +129,20 @@ namespace sc_hw_metrics {
         }
     };
 
+    SC_MODULE(pass) {
+        sc_in<double> input;
+        sc_out<double> output;
+
+        SC_CTOR(pass) {
+            SC_METHOD(compute);
+            sensitive << input;
+        }
+
+        void compute() {
+            output.write(input.read());
+        }
+    };
+
     SC_MODULE(asil) {
         sc_in<double> residual;
         sc_in<double> latent;
@@ -169,6 +183,7 @@ namespace sc_hw_metrics {
             std::cout << "SPFM: " << spfm       << "%" << std::endl;
             std::cout << "LFM:  " << lfm        << "%" << std::endl;
             std::cout << "ASIL: " << asil_level << std::endl;
+            std::cout << "Time:" << sc_time_stamp() << " Deltas:" << sc_delta_count() << endl;
         }
     };
 
