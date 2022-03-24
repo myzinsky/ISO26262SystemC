@@ -62,17 +62,19 @@ SC_MODULE(DRAM_SEC_ECC)
 {
 
     sc_in<double> I_SBE, I_DBE;//, I_MBE, I_WD;
-    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE;//, O_MBE, O_WD;
+    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE, O_LAT_SEC_BROKEN;//, O_MBE, O_WD;
     coverage sec_coverage;
     split sec_split;
     pass sec_pass;
+    basic_event sec_broken;
 
     SC_CTOR(DRAM_SEC_ECC) : I_SBE("I_SBE"), I_DBE("I_DBE"),// I_MBE("I_MBE"), I_WD("I_WD"),
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"),
                             O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"),
                             sec_coverage("SEC_Coverage", 1.0),
                             sec_split("SEC_split"),
-                            sec_pass("SEC_PASS")
+                            sec_pass("SEC_PASS"),
+                            sec_broken("SEC_BROKEN", 0.1)
     {
         sec_coverage.input(I_SBE);
         sec_coverage.output(O_RES_SBE);
@@ -84,6 +86,8 @@ SC_MODULE(DRAM_SEC_ECC)
 
         sec_pass.input(I_DBE);
         sec_pass.output(O_LAT_DBE);
+
+        sec_broken.output(O_LAT_SEC_BROKEN);
     }
 
 };
@@ -205,12 +209,13 @@ SC_MODULE(DRAM_BUS_TRIM)
 SC_MODULE(DRAM_SEC_DED) 
 {
     sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_LAT_SBE, I_LAT_DBE;
-    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE;
+    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE, O_LAT_SEC_DED_BROKEN;
 
     coverage res_sbe_cov, res_dbe_cov, res_tbe_cov, lat_sbe_cov, lat_dbe_cov;
     split res_tbe_split;
     sum lat_sbe_sum, lat_dbe_sum;
     pass lat_tbe_pass;
+    basic_event sec_ded_broken;
     sc_signal<double> s1, s2, s3, s4, s5;
 
     SC_CTOR(DRAM_SEC_DED) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"),
@@ -220,7 +225,8 @@ SC_MODULE(DRAM_SEC_DED)
                             res_tbe_split("RES_TBE_SPLIT"),
                             lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"),
                             lat_tbe_pass("LAT_TBE_PASS"),
-                            s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5")
+                            s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"),
+                            sec_ded_broken("SEC_DED_BROKEN", 0.1)
     {
         res_sbe_cov.input(I_RES_SBE);
         res_dbe_cov.input(I_RES_DBE);
@@ -253,6 +259,8 @@ SC_MODULE(DRAM_SEC_DED)
 
         lat_tbe_pass.input(I_RES_TBE);
         lat_tbe_pass.output(O_LAT_TBE);
+
+        sec_ded_broken.output(O_LAT_SEC_DED_BROKEN);
     }
 };
 
@@ -348,13 +356,14 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     sec_ecc.I_SBE.bind(a1);
     sec_ecc.I_DBE.bind(a2);
 
-    sc_signal<double> b1("b1"), b2("b2"), b3("b3"), b4("b4"), b5("b5");
+    sc_signal<double> b1("b1"), b2("b2"), b3("b3"), b4("b4"), b5("b5"), b6("b6");
 
     sec_ecc.O_RES_SBE.bind(b1);
     sec_ecc.O_RES_DBE.bind(b2);
     sec_ecc.O_RES_TBE.bind(b3);
     sec_ecc.O_LAT_SBE.bind(b4);
     sec_ecc.O_LAT_DBE.bind(b5);
+    sec_ecc.O_LAT_SEC_BROKEN.bind(b6);
 
     sec_trim.I_RES_SBE.bind(b1);
     sec_trim.I_RES_DBE.bind(b2);
@@ -376,7 +385,7 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     bus_trim.I_LAT_SBE.bind(c4);
     bus_trim.I_LAT_DBE.bind(c5);
 
-    sc_signal<double> d1("d1"), d2("d2"), d3("d3"), d4("d4"), d5("d5");
+    sc_signal<double> d1("d1"), d2("d2"), d3("d3"), d4("d4"), d5("d5"), d6("d6");
 
     bus_trim.O_RES_SBE.bind(d1);
     bus_trim.O_RES_DBE.bind(d2);
@@ -389,6 +398,7 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     sec_ded.I_RES_TBE.bind(d3);
     sec_ded.I_LAT_SBE.bind(d4);
     sec_ded.I_LAT_DBE.bind(d5);
+    sec_ded.O_LAT_SEC_DED_BROKEN.bind(d6);
 
     sc_signal<double> e1("e1"), e2("e2"), e3("e3"), e4("e4"), e5("e5"), e6("e6"), e7("e7");
 
@@ -426,6 +436,8 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     latent.inputs.bind(f5);
     latent.inputs.bind(f6);
     latent.inputs.bind(f7);
+    latent.inputs.bind(b6); // SEC Broken
+    latent.inputs.bind(d6); // SEC-DED Broken
 
     sc_signal<double> latent_result("latent_result"), residual_result("residual_result");
 
