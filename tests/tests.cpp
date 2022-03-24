@@ -175,6 +175,20 @@ TEST(hw_metric, split) {
     EXPECT_DOUBLE_EQ(o2.read(), 13.0);
 }
 
+TEST(hw_metric, pass) {
+    sc_signal<double> i("i", 10.0);
+    sc_signal<double> o("o");
+
+    sc_hw_metrics::pass p("sum");
+
+    p.input.bind(i);
+    p.output.bind(o);
+
+    sc_start();
+
+    EXPECT_DOUBLE_EQ(o.read(), 10.0);
+}
+
 TEST(hw_metric, sum) {
     sc_signal<double> i1("i1", 10.0);
     sc_signal<double> i2("i2", 10.0);
