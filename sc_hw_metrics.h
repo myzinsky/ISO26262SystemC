@@ -42,6 +42,8 @@ namespace sc_hw_metrics {
     SC_MODULE(coverage) {
         sc_in<double> input;
         sc_out<double> output;
+        sc_port<sc_signal_inout_if<double>, 0, SC_ZERO_OR_MORE_BOUND> latent;
+
         double dc;
 
         SC_HAS_PROCESS(coverage);
@@ -56,6 +58,9 @@ namespace sc_hw_metrics {
         void compute_fit()
         {
             output.write(input.read()*(1-dc));
+            if(latent.bind_count() != 0) {
+                latent->write(input.read()*(dc));
+            }
         }
     };
 

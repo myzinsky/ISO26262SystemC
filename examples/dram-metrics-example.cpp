@@ -47,10 +47,10 @@ SC_MODULE(DRAM)
     SC_CTOR(DRAM) : E_SBE(0.7*287), E_DBE(0.0748*287),// E_MBE(0.06*287e-9), E_WD(0.0748*287e-9),
                     SBE("SBE"), DBE("DBE")//, MBE("MBE"), WD("WD")
     {
-        SC_METHOD(compute_prob);
+        SC_METHOD(compute);
     }
 
-    void compute_prob () {
+    void compute () {
         SBE.write(E_SBE);
         DBE.write(E_DBE);
         //MBE.write(E_MBE);
@@ -64,7 +64,6 @@ SC_MODULE(DRAM_SEC_ECC)
     sc_in<double> I_SBE, I_DBE;//, I_MBE, I_WD;
     sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE;//, O_MBE, O_WD;
     coverage sec_coverage;
-    coverage sec_propagation;
     split sec_split;
     pass sec_pass;
 
@@ -73,13 +72,11 @@ SC_MODULE(DRAM_SEC_ECC)
                             O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"),
                             sec_coverage("SEC_Coverage", 1.0),
                             sec_split("SEC_split"),
-                            sec_propagation("SEC_propagation", 0.0),
                             sec_pass("SEC_PASS")
     {
         sec_coverage.input(I_SBE);
         sec_coverage.output(O_RES_SBE);
-        sec_propagation.input(I_SBE);
-        sec_propagation.output(O_LAT_SBE);
+        sec_coverage.latent(O_LAT_SBE);
 
         sec_split.input(I_DBE);
         sec_split.outputs.bind(O_RES_DBE, 0.83);
@@ -210,7 +207,7 @@ SC_MODULE(DRAM_SEC_DED)
     sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_LAT_SBE, I_LAT_DBE;
     sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE;
 
-    coverage res_sbe_cov, res_dbe_cov, res_tbe_cov, lat_sbe_cov, lat_dbe_cov, lat_sbe_prop, lat_dbe_prob;
+    coverage res_sbe_cov, res_dbe_cov, res_tbe_cov, lat_sbe_cov, lat_dbe_cov;
     split res_tbe_split;
     sum lat_sbe_sum, lat_dbe_sum;
     pass lat_tbe_pass;
@@ -220,7 +217,6 @@ SC_MODULE(DRAM_SEC_DED)
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"),
                             res_sbe_cov("RES_SBE_COV", 1.0), res_dbe_cov("RES_DBE_COV", 1.0), res_tbe_cov("RES_TBE_COV",1.0),
                             lat_sbe_cov("LAT_SBE_COV", 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0),
-                            lat_sbe_prop("LAT_SBE_PROP", 0.0), lat_dbe_prob("LAT_DBE_PROB", 0.0),
                             res_tbe_split("RES_TBE_SPLIT"),
                             lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"),
                             lat_tbe_pass("LAT_TBE_PASS"),
@@ -233,9 +229,6 @@ SC_MODULE(DRAM_SEC_DED)
         lat_sbe_cov.input(I_LAT_SBE);
         lat_dbe_cov.input(I_LAT_DBE);
 
-        lat_sbe_prop.input(I_RES_SBE);
-        lat_dbe_prob.input(I_RES_DBE);
-
         res_sbe_cov.output(O_RES_SBE);
         res_dbe_cov.output(O_RES_DBE);
         res_tbe_cov.output(O_RES_TBE);
@@ -246,8 +239,9 @@ SC_MODULE(DRAM_SEC_DED)
         res_tbe_cov.input(s1);
         lat_sbe_cov.output.bind(s2);
         lat_dbe_cov.output.bind(s3);
-        lat_sbe_prop.output.bind(s4);
-        lat_dbe_prob.output.bind(s5);
+        
+        res_sbe_cov.latent.bind(s4);
+        res_dbe_cov.latent.bind(s5);
 
         lat_sbe_sum.inputs.bind(s2);
         lat_sbe_sum.inputs.bind(s4);
