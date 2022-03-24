@@ -66,13 +66,15 @@ SC_MODULE(DRAM_SEC_ECC)
     coverage sec_coverage;
     coverage sec_propagation;
     split sec_split;
+    pass sec_pass;
 
     SC_CTOR(DRAM_SEC_ECC) : I_SBE("I_SBE"), I_DBE("I_DBE"),// I_MBE("I_MBE"), I_WD("I_WD"),
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"),
                             O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"),
                             sec_coverage("SEC_Coverage", 1.0),
                             sec_split("SEC_split"),
-                            sec_propagation("SEC_propagation", 0.0)
+                            sec_propagation("SEC_propagation", 0.0),
+                            sec_pass("SEC_PASS")
     {
         sec_coverage.input(I_SBE);
         sec_coverage.output(O_RES_SBE);
@@ -83,12 +85,8 @@ SC_MODULE(DRAM_SEC_ECC)
         sec_split.outputs.bind(O_RES_DBE, 0.83);
         sec_split.outputs.bind(O_RES_TBE, 0.17);
 
-        SC_METHOD(compute);
-        sensitive << I_DBE;
-    }
-
-    void compute() {
-        O_LAT_DBE.write(I_DBE.read());
+        sec_pass.input(I_DBE);
+        sec_pass.output(O_LAT_DBE);
     }
 
 };
@@ -99,14 +97,16 @@ SC_MODULE(DRAM_SEC_TRIM)
     sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE;
 
     split res_sbe_split, res_dbe_split, res_tbe_split, lat_sbe_split, lat_dbe_split;
+    sum res_sbe_sum, res_dbe_sum, lat_sbe_sum;
 
-    sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9;
+    sc_signal<double> s1, s2, s3, s4, s5, s7, s8;
 
     SC_CTOR(DRAM_SEC_TRIM) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"),
                              O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"),
                              res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
                              lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"),
-                             s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9")
+                             res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"),
+                             s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s7("s7"), s8("s8")
 
     {
         res_sbe_split.input(I_RES_SBE);
@@ -122,25 +122,25 @@ SC_MODULE(DRAM_SEC_TRIM)
 
         res_tbe_split.outputs.bind(s4, 0.009);
         res_tbe_split.outputs.bind(s5, 0.15);
-        res_tbe_split.outputs.bind(s6, 0.83);
+        res_tbe_split.outputs.bind(O_RES_TBE, 0.83);
 
         lat_sbe_split.outputs.bind(s7, 0.94);
 
         lat_dbe_split.outputs.bind(s8, 0.11);
-        lat_dbe_split.outputs.bind(s9, 0.89);
+        lat_dbe_split.outputs.bind(O_LAT_DBE, 0.89);
 
-        SC_METHOD(compute);
-        sensitive << s1 << s2 << s3 << s4 << s5 << s6 << s7 << s8 << s9;
+        res_sbe_sum.inputs.bind(s1);
+        res_sbe_sum.inputs.bind(s2);
+        res_sbe_sum.inputs.bind(s4);
+        res_sbe_sum.output(O_RES_SBE);
 
-    }
+        res_dbe_sum.inputs.bind(s3);
+        res_dbe_sum.inputs.bind(s5);
+        res_dbe_sum.output(O_RES_DBE);
 
-    void compute() {
-        O_RES_SBE = (s1+s2+s4);
-        O_RES_DBE = (s3+s5);
-        O_RES_TBE = (s6);
-
-        O_LAT_SBE = (s7+s8);
-        O_LAT_DBE = (s9);
+        lat_sbe_sum.inputs.bind(s7);
+        lat_sbe_sum.inputs.bind(s8);
+        lat_sbe_sum.output(O_LAT_SBE);
     }
 };
 
@@ -150,6 +150,8 @@ SC_MODULE(DRAM_BUS_TRIM)
     sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE;
 
     split res_sbe_split, res_dbe_split, res_tbe_split, lat_sbe_split, lat_dbe_split;
+    sum res_sbe_sum, res_dbe_sum, lat_sbe_sum;
+    pass res_tbe_pass, lat_dbe_pass;
 
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9;
 
@@ -157,6 +159,8 @@ SC_MODULE(DRAM_BUS_TRIM)
                              O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"),
                              res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
                              lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"),
+                             res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"),
+                             res_tbe_pass("RES_TBE_PASS"), lat_dbe_pass("LAT_DBE_PASS"),
                              s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9")
 
     {
@@ -180,18 +184,24 @@ SC_MODULE(DRAM_BUS_TRIM)
         lat_dbe_split.outputs.bind(s8, 0.496);
         lat_dbe_split.outputs.bind(s9, 0.314);
 
-        SC_METHOD(compute);
-        sensitive << s1 << s2 << s3 << s4 << s5 << s6 << s7 << s8 << s9;
+        res_sbe_sum.inputs.bind(s1);
+        res_sbe_sum.inputs.bind(s2);
+        res_sbe_sum.inputs.bind(s4);
+        res_sbe_sum.output.bind(O_RES_SBE);
 
-    }
-    
-    void compute() {
-        O_RES_SBE = (s1+s2+s4);
-        O_RES_DBE = (s3+s5);
-        O_RES_TBE = (s6);
+        res_dbe_sum.inputs.bind(s3);
+        res_dbe_sum.inputs.bind(s5);
+        res_dbe_sum.output.bind(O_RES_DBE);
 
-        O_LAT_SBE = (s7+s8);
-        O_LAT_DBE = (s9);
+        lat_sbe_sum.inputs(s7);
+        lat_sbe_sum.inputs(s8);
+        lat_sbe_sum.output.bind(O_LAT_SBE);
+
+        res_tbe_pass.input(s6);
+        res_tbe_pass.output(O_RES_TBE);
+
+        lat_dbe_pass.input(s9);
+        lat_dbe_pass.output(O_LAT_DBE);
     }
 };
 
@@ -202,6 +212,8 @@ SC_MODULE(DRAM_SEC_DED)
 
     coverage res_sbe_cov, res_dbe_cov, res_tbe_cov, lat_sbe_cov, lat_dbe_cov, lat_sbe_prop, lat_dbe_prob;
     split res_tbe_split;
+    sum lat_sbe_sum, lat_dbe_sum;
+    pass lat_tbe_pass;
     sc_signal<double> s1, s2, s3, s4, s5;
 
     SC_CTOR(DRAM_SEC_DED) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"),
@@ -210,6 +222,8 @@ SC_MODULE(DRAM_SEC_DED)
                             lat_sbe_cov("LAT_SBE_COV", 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0),
                             lat_sbe_prop("LAT_SBE_PROP", 0.0), lat_dbe_prob("LAT_DBE_PROB", 0.0),
                             res_tbe_split("RES_TBE_SPLIT"),
+                            lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"),
+                            lat_tbe_pass("LAT_TBE_PASS"),
                             s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5")
     {
         res_sbe_cov.input(I_RES_SBE);
@@ -235,15 +249,16 @@ SC_MODULE(DRAM_SEC_DED)
         lat_sbe_prop.output.bind(s4);
         lat_dbe_prob.output.bind(s5);
 
-        SC_METHOD(compute);
-        sensitive << s1 << s2 << s3 << s4 << s5;
+        lat_sbe_sum.inputs.bind(s2);
+        lat_sbe_sum.inputs.bind(s4);
+        lat_sbe_sum.output.bind(O_LAT_SBE);
 
-    }
+        lat_dbe_sum.inputs.bind(s3);
+        lat_dbe_sum.inputs.bind(s5);
+        lat_dbe_sum.output.bind(O_LAT_DBE);
 
-    void compute() {
-        O_LAT_SBE = (s2+s4);
-        O_LAT_DBE = (s3+s5);
-        O_LAT_TBE = (I_RES_TBE);
+        lat_tbe_pass.input(I_RES_TBE);
+        lat_tbe_pass.output(O_LAT_TBE);
     }
 };
 
@@ -253,12 +268,17 @@ SC_MODULE(DRAM_SEC_DED_TRIM)
     sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE;
 
     split res_sbe_split, res_dbe_split, res_tbe_split, lat_sbe_split, lat_dbe_split, lat_tbe_split;
+    sum res_sbe_sum, res_dbe_sum, lat_sbe_sum, lat_dbe_sum;
+    pass res_tbe_pass, res_mbe_pass, lat_tbe_pass;
+
     sc_signal<double> s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
 
     SC_CTOR(DRAM_SEC_DED_TRIM) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_RES_MBE("I_RES_MBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_LAT_TBE("I_LAT_TBE"),
                                  O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"),
                                  res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
                                  lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"), lat_tbe_split("LAT_TBE_SPLIT"),
+                                 res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"),
+                                 res_tbe_pass("RES_TBE_PASS"), res_mbe_pass("RES_MBE_PASS"), lat_tbe_pass("LAT_TBE_PASS"),
                                  s0("s0"), s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9"), s10("s10"), s11("s11")
     {
         res_sbe_split.input(I_RES_SBE);
@@ -286,21 +306,33 @@ SC_MODULE(DRAM_SEC_DED_TRIM)
         lat_tbe_split.outputs.bind(s10,0.27);
         lat_tbe_split.outputs.bind(s11,0.70);
 
-        SC_METHOD(compute);
-        sensitive << s1 << s2 << s3 << s4 << s5 << s6 << s7 << s8 << s9 << s10 << s11;
+        res_sbe_sum.inputs.bind(s0);
+        res_sbe_sum.inputs.bind(s1);
+        res_sbe_sum.inputs.bind(s3);
+        res_sbe_sum.output.bind(O_RES_SBE);
 
+        res_dbe_sum.inputs.bind(s2);
+        res_dbe_sum.inputs.bind(s4);
+        res_dbe_sum.output.bind(O_RES_DBE);
+
+        lat_sbe_sum.inputs.bind(s6);
+        lat_sbe_sum.inputs.bind(s7);
+        lat_sbe_sum.inputs.bind(s9);
+        lat_sbe_sum.output.bind(O_LAT_SBE);
+
+        lat_dbe_sum.inputs.bind(s8);
+        lat_dbe_sum.inputs.bind(s10);
+        lat_dbe_sum.output.bind(O_LAT_DBE);
+
+        res_tbe_pass.input(s5);
+        res_tbe_pass.output(O_RES_TBE);
+
+        res_mbe_pass.input(I_RES_MBE);
+        res_mbe_pass.output(O_RES_MBE);
+
+        lat_tbe_pass.input(s11);
+        lat_tbe_pass.output(O_LAT_TBE);
     }
-
-    void compute() {
-        O_RES_SBE = (s0+s1+s3);
-        O_RES_DBE = (s2+s4);
-        O_RES_TBE = (s5);
-        O_RES_MBE = (I_RES_MBE);
-        O_LAT_SBE = (s6+s7+s9);
-        O_LAT_DBE = (s8+s10);
-        O_LAT_TBE = (s11);
-    }
-
 };
 
 int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *sc_argv[])
@@ -403,8 +435,8 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
 
     sc_signal<double> latent_result("latent_result"), residual_result("residual_result");
 
-    residual.output.bind(latent_result);
-    latent.output.bind(residual_result);
+    residual.output.bind(residual_result);
+    latent.output.bind(latent_result);
 
     calculate_asil.residual.bind(residual_result);
     calculate_asil.latent.bind(latent_result);
@@ -445,6 +477,12 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     std::cout << "F: LAT_DBE: " << f6 << std::endl;
     std::cout << "F: LAT_TBE: " << f7 << std::endl;
     std::cout << "------------------------------ " << std::endl;
+
+    //RES:  0.29685
+    //LAT:  15.7815
+    //SPFM:  99.8665%
+    //LFM: 92.903%
+    //ASIL: ASIL-D
 
     return 0;
 }
