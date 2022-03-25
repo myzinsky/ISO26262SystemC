@@ -39,16 +39,15 @@
 
 using namespace sc_hw_metrics;
 
-#define DRAM_FIT 2300.0 //287.0*8.0
-#define OTHER_COMPONENTS 1920.0
-
 SC_MODULE(DRAM)
 {
     sc_out<double> SBE, DBE, MBE, WD;
     double E_SBE, E_DBE, E_MBE, E_WD;
 
-    SC_CTOR(DRAM) : E_SBE(0.7*DRAM_FIT), E_DBE(0.0748*DRAM_FIT), E_MBE(0.0748*DRAM_FIT), E_WD(0.0748*DRAM_FIT),
-                    SBE("SBE"), DBE("DBE"), MBE("MBE"), WD("WD")
+    SC_HAS_PROCESS(DRAM);
+    DRAM(sc_module_name name, double DRAM_FIT) :
+        E_SBE(0.7*DRAM_FIT), E_DBE(0.0748*DRAM_FIT), E_MBE(0.0748*DRAM_FIT), E_WD(0.0748*DRAM_FIT),
+        SBE("SBE"), DBE("DBE"), MBE("MBE"), WD("WD")
     {
         SC_METHOD(compute);
     }
@@ -174,14 +173,16 @@ SC_MODULE(DRAM_BUS_TRIM)
 
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
 
-    SC_CTOR(DRAM_BUS_TRIM) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"),
-                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
-                             res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
-                             lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"),
-                             res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"), res_mbe_sum("RES_MBE_SUM"),
-                             res_tbe_pass("RES_TBE_PASS"), lat_dbe_pass("LAT_DBE_PASS"), res_wd_pass("res_wd_pass"),
-                             s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9"), s10("10"),
-                             dq_upset("DQ_UPSET", 0.001*DRAM_FIT), all_zero("ALL_ZERO", 0.0748*DRAM_FIT)
+    SC_HAS_PROCESS(DRAM_BUS_TRIM);
+    DRAM_BUS_TRIM(sc_module_name name, double DRAM_FIT) :
+        I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"),
+        O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
+        res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
+        lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"),
+        res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"), res_mbe_sum("RES_MBE_SUM"),
+        res_tbe_pass("RES_TBE_PASS"), lat_dbe_pass("LAT_DBE_PASS"), res_wd_pass("res_wd_pass"),
+        s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9"), s10("10"),
+        dq_upset("DQ_UPSET", 0.001*DRAM_FIT), all_zero("ALL_ZERO", 0.0748*DRAM_FIT)
     {
         res_sbe_split.input(I_RES_SBE);
         res_dbe_split.input(I_RES_DBE);
@@ -397,12 +398,14 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
     coverage other_cov;
     coverage other_cov_lat;
 
-    SC_CTOR(ALL_OTHER_COMPONENTS) : s0("s0"), s1("s1"), s2("s2"),
-                                    OTHER_RES("OTHER_RES"), OTHER_LAT("OTHER_LAT"),
-                                    other_split("OTHER_SPLIT"),
-                                    other_cov("OTHER_COV", 0.9),
-                                    other_cov_lat("OTHER_COV", 1.0),
-                                    all_other("ALL_OTHER", OTHER_COMPONENTS)
+    SC_HAS_PROCESS(ALL_OTHER_COMPONENTS);
+    ALL_OTHER_COMPONENTS(sc_module_name name, double OTHER_COMPONENTS) :
+        s0("s0"), s1("s1"), s2("s2"),
+        OTHER_RES("OTHER_RES"), OTHER_LAT("OTHER_LAT"),
+        other_split("OTHER_SPLIT"),
+        other_cov("OTHER_COV", 0.9),
+        other_cov_lat("OTHER_COV", 1.0),
+        all_other("ALL_OTHER", OTHER_COMPONENTS)
     {
         all_other.output.bind(s0);
         other_split.input(s0);
@@ -417,13 +420,15 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
 
 int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *sc_argv[])
 {
-    DRAM dram("DRAM");
+    double DRAM_FIT = 2300.0;
+    double OTHER_COMPONENTS = 1920.0;
+    DRAM dram("DRAM", DRAM_FIT);
     DRAM_SEC_ECC sec_ecc("DRAM_SEC_ECC");
     DRAM_SEC_TRIM sec_trim("DRAM_SEC_TRIM");
-    DRAM_BUS_TRIM bus_trim("DRAM_BUS_TRIM");
+    DRAM_BUS_TRIM bus_trim("DRAM_BUS_TRIM", DRAM_FIT);
     DRAM_SEC_DED sec_ded("DRAM_SEC_DED");
     DRAM_SEC_DED_TRIM sec_ded_trim("DRAM_SEC_DED_TRIM");
-    ALL_OTHER_COMPONENTS all_other_components("ALL_OTHER_COMPONENTS");
+    ALL_OTHER_COMPONENTS all_other_components("ALL_OTHER_COMPONENTS", OTHER_COMPONENTS);
     sum residual("RESIDUAL"), latent("LATENT");
     asil calculate_asil("ASIL", DRAM_FIT+OTHER_COMPONENTS);
 
