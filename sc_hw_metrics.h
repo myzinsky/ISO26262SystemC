@@ -77,7 +77,7 @@ namespace sc_hw_metrics {
         {
             output.write(input.read()*(1-dc));
             if(latent.bind_count() != 0) {
-                latent->write(input.read()*(dc));
+                latent->write(input.read()*dc);
             }
         }
     };
@@ -154,7 +154,7 @@ namespace sc_hw_metrics {
         }
     };
 
-    SC_MODULE(pass)
+    SC_MODULE(pass) // TODO: Kann man das nicht durch ein signal lösen? 
     {
         sc_in<double> input;
         sc_out<double> output;
@@ -178,14 +178,19 @@ namespace sc_hw_metrics {
         double lfm;
         std::string asil_level;
 
-        SC_CTOR(asil) {
+        double total;
+
+        SC_HAS_PROCESS(asil);
+        asil(sc_module_name name, double total) : total(total) {
             SC_METHOD(compute);
             sensitive << residual << latent;
         }
 
         void compute() {
-            spfm = 100*(1-(residual/(0.7*287+0.0748*287)));
-            lfm = 100*(1-(latent/(0.7*287+0.0748*287)));
+            spfm = 100*(1-(residual/(total)));
+            lfm = 100*(1-(latent/(total-residual)));
+
+            asil_level = "QM";
 
             if(residual < 1000.0) {
                 asil_level = "ASIL-A";
@@ -213,6 +218,4 @@ namespace sc_hw_metrics {
             std::cout << "Time:" << sc_time_stamp() << " Deltas:" << sc_delta_count() << endl;
         }
     };
-
 }
-
