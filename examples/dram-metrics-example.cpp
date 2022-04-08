@@ -568,6 +568,11 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
 
     sc_start();
 
+    std::cout << "A: RES_SBE: " << a1 << std::endl;
+    std::cout << "A: RES_DBE: " << a2 << std::endl;
+    std::cout << "A: RES_MBE: " << a3 << std::endl;
+    std::cout << "A: RES_WD:  " << a4 << std::endl;
+    std::cout << "------------------------------ " << std::endl;
     std::cout << "B: RES_SBE: " << b1 << std::endl;
     std::cout << "B: RES_DBE: " << b2 << std::endl;
     std::cout << "B: RES_TBE: " << b3 << std::endl;
