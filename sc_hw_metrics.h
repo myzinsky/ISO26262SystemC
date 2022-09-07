@@ -129,7 +129,7 @@ namespace sc_hw_metrics {
             if(total_rate > 1.0)
             {
                 std::cout << this->name() << " " << total_rate << " ";
-                SC_REPORT_FATAL("SPLIT", "Total Rate Grater than 100%");
+                SC_REPORT_FATAL("SPLIT", "Total Rate greater than 100%");
             }
         }
 
