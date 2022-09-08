@@ -72,7 +72,8 @@ SC_MODULE(DRAM_SEC_ECC)
 
     SC_CTOR(DRAM_SEC_ECC) : I_SBE("I_SBE"), I_DBE("I_DBE"), I_MBE("I_MBE"), I_WD("I_WD"),
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"),
-                            O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"),
+                            O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_SEC_BROKEN("O_LAT_SEC_BROKEN"),
+                            O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"),
                             sec_coverage("SEC_Coverage", 1.0),
                             sec_split("SEC_split"),
                             sec_pass("SEC_PASS"), mbe_pass("MBE_PASS"), wd_pass("WD_PASS"),
@@ -181,7 +182,7 @@ SC_MODULE(DRAM_BUS_TRIM)
         lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"),
         res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"), res_mbe_sum("RES_MBE_SUM"),
         res_tbe_pass("RES_TBE_PASS"), lat_dbe_pass("LAT_DBE_PASS"), res_wd_pass("res_wd_pass"),
-        s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9"), s10("10"),
+        s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9"), s10("s10"),
         dq_upset("DQ_UPSET", 0.001*DRAM_FIT), all_zero("ALL_ZERO", 0.0748*DRAM_FIT)
     {
         res_sbe_split.input(I_RES_SBE);
@@ -249,7 +250,7 @@ SC_MODULE(DRAM_SEC_DED)
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7;
 
     SC_CTOR(DRAM_SEC_DED) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"), I_RES_AZ("I_RES_AZ"),
-                            O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"), O_LAT_MBE("O_LAT_MBE"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
+                            O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"), O_LAT_MBE("O_LAT_MBE"), O_LAT_SEC_DED_BROKEN("O_LAT_SEC_DED_BROKEN"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
                             res_sbe_cov("RES_SBE_COV", 1.0), res_dbe_cov("RES_DBE_COV", 1.0), res_tbe_cov("RES_TBE_COV",1.0), res_mbe_cov("RES_MBE_COV",0.5),
                             lat_sbe_cov("LAT_SBE_COV", 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0),
                             res_tbe_split("RES_TBE_SPLIT"),
