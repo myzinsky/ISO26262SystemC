@@ -405,7 +405,7 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
         OTHER_RES("OTHER_RES"), OTHER_LAT("OTHER_LAT"),
         other_split("OTHER_SPLIT"),
         other_cov("OTHER_COV", 0.9),
-        other_cov_lat("OTHER_COV", 1.0),
+        other_cov_lat("OTHER_COV_LAT", 1.0),
         all_other("ALL_OTHER", OTHER_COMPONENTS)
     {
         all_other.output.bind(s0);
