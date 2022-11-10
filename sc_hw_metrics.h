@@ -120,7 +120,7 @@ namespace sc_hw_metrics {
 
         // Could be used to calculate unseen dormant faults (safe faults)
         void before_end_of_elaboration() {
-            double total_rate;
+            double total_rate = 0.0;
             
             for (auto& n : outputs.split_rates) {
                 total_rate += n;
