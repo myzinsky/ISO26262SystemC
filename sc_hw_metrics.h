@@ -209,7 +209,7 @@ namespace sc_hw_metrics {
             }
         }
 
-        ~asil() {
+        void end_of_simulation() override {
             std::cout << "RES:  " << residual   << std::endl;
             std::cout << "LAT:  " << latent     << std::endl;
             std::cout << "SPFM: " << spfm       << "%" << std::endl;
