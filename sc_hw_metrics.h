@@ -62,10 +62,12 @@ namespace sc_hw_metrics {
         sc_core::sc_port<sc_core::sc_signal_inout_if<double>, 0, sc_core::SC_ZERO_OR_MORE_BOUND> latent;
 
         double dc;
+        double lc;
 
-        coverage(const sc_core::sc_module_name& name, double dc) : input("input"),
+        coverage(const sc_core::sc_module_name& name, double dc, double lc) : input("input"),
                                                    output("output"),
-                                                   dc(dc)
+                                                   dc(dc),
+                                                   lc(lc)
         {
             SC_METHOD(compute_fit);
             sensitive << input;
@@ -75,7 +77,7 @@ namespace sc_hw_metrics {
         {
             output.write(input.read()*(1-dc));
             if(latent.bind_count() != 0) {
-                latent->write(input.read()*dc);
+                latent->write(input.read()*(1-lc));
             }
         }
     };

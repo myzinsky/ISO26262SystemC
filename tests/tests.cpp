@@ -161,7 +161,7 @@ TEST(hw_metric, coverage) {
     sc_signal<double> o("o");
     sc_signal<double> l("l");
 
-    sc_hw_metrics::coverage m("m", 0.83);
+    sc_hw_metrics::coverage m("m", 0.83, 1.0 - 0.83);
 
     m.input.bind(i);
     m.output.bind(o);

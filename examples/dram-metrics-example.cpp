@@ -74,7 +74,7 @@ SC_MODULE(DRAM_SEC_ECC)
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"),
                             O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_SEC_BROKEN("O_LAT_SEC_BROKEN"),
                             O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"),
-                            sec_coverage("SEC_Coverage", 1.0),
+                            sec_coverage("SEC_Coverage", 1.0, 1.0 - 1.0),
                             sec_split("SEC_split"),
                             sec_pass("SEC_PASS"), mbe_pass("MBE_PASS"), wd_pass("WD_PASS"),
                             sec_broken("SEC_BROKEN", 0.1)
@@ -251,8 +251,8 @@ SC_MODULE(DRAM_SEC_DED)
 
     SC_CTOR(DRAM_SEC_DED) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"), I_RES_AZ("I_RES_AZ"),
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"), O_LAT_MBE("O_LAT_MBE"), O_LAT_SEC_DED_BROKEN("O_LAT_SEC_DED_BROKEN"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
-                            res_sbe_cov("RES_SBE_COV", 1.0), res_dbe_cov("RES_DBE_COV", 1.0), res_tbe_cov("RES_TBE_COV",1.0), res_mbe_cov("RES_MBE_COV",0.5),
-                            lat_sbe_cov("LAT_SBE_COV", 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0),
+                            res_sbe_cov("RES_SBE_COV", 1.0, 1.0 - 1.0), res_dbe_cov("RES_DBE_COV", 1.0, 1.0 - 1.0), res_tbe_cov("RES_TBE_COV",1.0, 1.0 - 1.0), res_mbe_cov("RES_MBE_COV",0.5, 1.0 - 0.5),
+                            lat_sbe_cov("LAT_SBE_COV", 1.0, 1.0 - 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0, 1.0 - 1.0),
                             res_tbe_split("RES_TBE_SPLIT"),
                             lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"), res_mbe_sum("RES_MBE_SUM"),
                             lat_tbe_pass("LAT_TBE_PASS"), res_wd_pass("RES_WD_PASS"), res_az_pass("RES_AZ_PASS"),
@@ -404,8 +404,8 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
         s0("s0"), s1("s1"), s2("s2"),
         OTHER_RES("OTHER_RES"), OTHER_LAT("OTHER_LAT"),
         other_split("OTHER_SPLIT"),
-        other_cov("OTHER_COV", 0.9),
-        other_cov_lat("OTHER_COV_LAT", 1.0),
+        other_cov("OTHER_COV", 0.9, 1.0 - 0.9),
+        other_cov_lat("OTHER_COV_LAT", 1.0, 1.0 - 1.0),
         all_other("ALL_OTHER", OTHER_COMPONENTS)
     {
         all_other.output.bind(s0);
