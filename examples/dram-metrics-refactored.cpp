@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Fraunhofer IESE
+ * Copyright (c) 2024, Fraunhofer IESE
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,28 +31,38 @@
  *
  * Authors:
  *    Matthias Jung
+ *    Derek Christ
  */
 
-#include <systemc.h>
+#include <sc_hw_metrics.h>
+
 #include <iostream>
-#include "../sc_hw_metrics.h"
+#include <systemc>
 
 using namespace sc_hw_metrics;
+using namespace sc_core;
 
 SC_MODULE(DRAM)
 {
     sc_out<double> SBE, DBE, MBE, WD;
     double E_SBE, E_DBE, E_MBE, E_WD;
 
-    SC_HAS_PROCESS(DRAM);
-    DRAM(sc_module_name name, double DRAM_FIT) :
-        E_SBE(0.7*DRAM_FIT), E_DBE(0.0748*DRAM_FIT), E_MBE(0.0748*DRAM_FIT), E_WD(0.0748*DRAM_FIT),
-        SBE("SBE"), DBE("DBE"), MBE("MBE"), WD("WD")
+    DRAM(const sc_module_name& name, double DRAM_FIT) :
+        sc_module(name),
+        E_SBE(0.7 * DRAM_FIT),
+        E_DBE(0.0748 * DRAM_FIT),
+        E_MBE(0.0748 * DRAM_FIT),
+        E_WD(0.0748 * DRAM_FIT),
+        SBE("SBE"),
+        DBE("DBE"),
+        MBE("MBE"),
+        WD("WD")
     {
         SC_METHOD(compute);
     }
 
-    void compute () {
+    void compute()
+    {
         SBE.write(E_SBE);
         DBE.write(E_DBE);
         MBE.write(E_MBE);
@@ -64,20 +74,33 @@ SC_MODULE(DRAM_SEC_ECC)
 {
 
     sc_in<double> I_SBE, I_DBE, I_MBE, I_WD;
-    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE, O_LAT_SEC_BROKEN, O_RES_MBE, O_RES_WD;
+    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE, O_LAT_SEC_BROKEN,
+        O_RES_MBE, O_RES_WD;
     coverage sec_coverage;
     split sec_split;
     pass sec_pass, mbe_pass, wd_pass;
     basic_event sec_broken;
 
-    SC_CTOR(DRAM_SEC_ECC) : I_SBE("I_SBE"), I_DBE("I_DBE"), I_MBE("I_MBE"), I_WD("I_WD"),
-                            O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"),
-                            O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_SEC_BROKEN("O_LAT_SEC_BROKEN"),
-                            O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"),
-                            sec_coverage("SEC_Coverage", 1.0),
-                            sec_split("SEC_split"),
-                            sec_pass("SEC_PASS"), mbe_pass("MBE_PASS"), wd_pass("WD_PASS"),
-                            sec_broken("SEC_BROKEN", 0.1)
+    DRAM_SEC_ECC(const sc_module_name& name) :
+        sc_module(name),
+        I_SBE("I_SBE"),
+        I_DBE("I_DBE"),
+        I_MBE("I_MBE"),
+        I_WD("I_WD"),
+        O_RES_SBE("O_RES_SBE"),
+        O_RES_DBE("O_RES_DBE"),
+        O_RES_TBE("O_RES_TBE"),
+        O_LAT_SBE("O_LAT_SBE"),
+        O_LAT_DBE("O_LAT_DBE"),
+        O_LAT_SEC_BROKEN("O_LAT_SEC_BROKEN"),
+        O_RES_MBE("O_RES_MBE"),
+        O_RES_WD("O_RES_WD"),
+        sec_coverage("SEC_Coverage", 1.0),
+        sec_split("SEC_split"),
+        sec_pass("SEC_PASS"),
+        mbe_pass("MBE_PASS"),
+        wd_pass("WD_PASS"),
+        sec_broken("SEC_BROKEN", 0.1)
     {
         sec_coverage.input(I_SBE);
         sec_coverage.output(O_RES_SBE);
@@ -98,7 +121,6 @@ SC_MODULE(DRAM_SEC_ECC)
         wd_pass.input(I_WD);
         wd_pass.output(O_RES_WD);
     }
-
 };
 
 SC_MODULE(DRAM_SEC_TRIM)
@@ -112,13 +134,39 @@ SC_MODULE(DRAM_SEC_TRIM)
 
     sc_signal<double> s1, s2, s3, s4, s5, s7, s8;
 
-    SC_CTOR(DRAM_SEC_TRIM) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"),
-                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"),
-                             res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
-                             lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"),
-                             res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"),
-                             mbe_pass("MBE_PASS"), wd_pass("WD_PASS"),
-                             s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s7("s7"), s8("s8")
+    DRAM_SEC_TRIM(const sc_module_name& name) :
+        sc_module(name),
+        I_RES_SBE("I_RES_SBE"),
+        I_RES_DBE("I_RES_DBE"),
+        I_RES_TBE("I_RES_TBE"),
+        I_LAT_SBE("I_LAT_SBE"),
+        I_LAT_DBE("I_LAT_DBE"),
+        I_RES_MBE("I_RES_MBE"),
+        I_RES_WD("I_RES_WD"),
+        O_RES_SBE("O_RES_SBE"),
+        O_RES_DBE("O_RES_DBE"),
+        O_RES_TBE("O_RES_TBE"),
+        O_LAT_SBE("O_LAT_SBE"),
+        O_LAT_DBE("O_LAT_DBE"),
+        O_RES_MBE("O_RES_MBE"),
+        O_RES_WD("O_RES_WD"),
+        res_sbe_split("RES_SBE_SPLIT"),
+        res_dbe_split("RES_DBE_SPLIT"),
+        res_tbe_split("RES_TBE_SPLIT"),
+        lat_sbe_split("LAT_SBE_SPLIT"),
+        lat_dbe_split("LAT_DBE_SPLIT"),
+        res_sbe_sum("RES_SBE_SUM"),
+        res_dbe_sum("RES_DBE_SUM"),
+        lat_sbe_sum("LAT_SBE_SUM"),
+        mbe_pass("MBE_PASS"),
+        wd_pass("WD_PASS"),
+        s1("s1"),
+        s2("s2"),
+        s3("s3"),
+        s4("s4"),
+        s5("s5"),
+        s7("s7"),
+        s8("s8")
 
     {
         res_sbe_split.input(I_RES_SBE);
@@ -165,7 +213,8 @@ SC_MODULE(DRAM_SEC_TRIM)
 SC_MODULE(DRAM_BUS_TRIM)
 {
     sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_LAT_SBE, I_LAT_DBE, I_RES_MBE, I_RES_WD;
-    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE, O_RES_MBE, O_RES_WD, O_RES_AZ;
+    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_LAT_SBE, O_LAT_DBE, O_RES_MBE, O_RES_WD,
+        O_RES_AZ;
 
     split res_sbe_split, res_dbe_split, res_tbe_split, lat_sbe_split, lat_dbe_split;
     sum res_sbe_sum, res_dbe_sum, lat_sbe_sum, res_mbe_sum;
@@ -174,16 +223,47 @@ SC_MODULE(DRAM_BUS_TRIM)
 
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
 
-    SC_HAS_PROCESS(DRAM_BUS_TRIM);
-    DRAM_BUS_TRIM(sc_module_name name, double DRAM_FIT) :
-        I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"),
-        O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
-        res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
-        lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"),
-        res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"), res_mbe_sum("RES_MBE_SUM"),
-        res_tbe_pass("RES_TBE_PASS"), lat_dbe_pass("LAT_DBE_PASS"), res_wd_pass("res_wd_pass"),
-        s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9"), s10("s10"),
-        dq_upset("DQ_UPSET", 0.001*DRAM_FIT), all_zero("ALL_ZERO", 0.0748*DRAM_FIT)
+    DRAM_BUS_TRIM(const sc_module_name& name, double DRAM_FIT) :
+        sc_module(name),
+        I_RES_SBE("I_RES_SBE"),
+        I_RES_DBE("I_RES_DBE"),
+        I_RES_TBE("I_RES_TBE"),
+        I_LAT_SBE("I_LAT_SBE"),
+        I_LAT_DBE("I_LAT_DBE"),
+        I_RES_MBE("I_RES_MBE"),
+        I_RES_WD("I_RES_WD"),
+        O_RES_SBE("O_RES_SBE"),
+        O_RES_DBE("O_RES_DBE"),
+        O_RES_TBE("O_RES_TBE"),
+        O_LAT_SBE("O_LAT_SBE"),
+        O_LAT_DBE("O_LAT_DBE"),
+        O_RES_MBE("O_RES_MBE"),
+        O_RES_WD("O_RES_WD"),
+        O_RES_AZ("O_RES_AZ"),
+        res_sbe_split("RES_SBE_SPLIT"),
+        res_dbe_split("RES_DBE_SPLIT"),
+        res_tbe_split("RES_TBE_SPLIT"),
+        lat_sbe_split("LAT_SBE_SPLIT"),
+        lat_dbe_split("LAT_DBE_SPLIT"),
+        res_sbe_sum("RES_SBE_SUM"),
+        res_dbe_sum("RES_DBE_SUM"),
+        lat_sbe_sum("LAT_SBE_SUM"),
+        res_mbe_sum("RES_MBE_SUM"),
+        res_tbe_pass("RES_TBE_PASS"),
+        lat_dbe_pass("LAT_DBE_PASS"),
+        res_wd_pass("res_wd_pass"),
+        s1("s1"),
+        s2("s2"),
+        s3("s3"),
+        s4("s4"),
+        s5("s5"),
+        s6("s6"),
+        s7("s7"),
+        s8("s8"),
+        s9("s9"),
+        s10("s10"),
+        dq_upset("DQ_UPSET", 0.001 * DRAM_FIT),
+        all_zero("ALL_ZERO", 0.0748 * DRAM_FIT)
     {
         res_sbe_split.input(I_RES_SBE);
         res_dbe_split.input(I_RES_DBE);
@@ -239,8 +319,10 @@ SC_MODULE(DRAM_BUS_TRIM)
 
 SC_MODULE(DRAM_SEC_DED)
 {
-    sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_LAT_SBE, I_LAT_DBE, I_RES_MBE, I_RES_WD, I_RES_AZ;
-    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE, O_LAT_MBE, O_LAT_SEC_DED_BROKEN, O_RES_WD, O_RES_AZ;
+    sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_LAT_SBE, I_LAT_DBE, I_RES_MBE, I_RES_WD,
+        I_RES_AZ;
+    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE,
+        O_LAT_MBE, O_LAT_SEC_DED_BROKEN, O_RES_WD, O_RES_AZ;
 
     coverage res_sbe_cov, res_dbe_cov, res_tbe_cov, lat_sbe_cov, lat_dbe_cov, res_mbe_cov;
     split res_tbe_split;
@@ -249,15 +331,47 @@ SC_MODULE(DRAM_SEC_DED)
     basic_event sec_ded_broken;
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7;
 
-    SC_CTOR(DRAM_SEC_DED) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"), I_RES_AZ("I_RES_AZ"),
-                            O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"), O_LAT_MBE("O_LAT_MBE"), O_LAT_SEC_DED_BROKEN("O_LAT_SEC_DED_BROKEN"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
-                            res_sbe_cov("RES_SBE_COV", 1.0), res_dbe_cov("RES_DBE_COV", 1.0), res_tbe_cov("RES_TBE_COV",1.0), res_mbe_cov("RES_MBE_COV",0.5),
-                            lat_sbe_cov("LAT_SBE_COV", 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0),
-                            res_tbe_split("RES_TBE_SPLIT"),
-                            lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"), res_mbe_sum("RES_MBE_SUM"),
-                            lat_tbe_pass("LAT_TBE_PASS"), res_wd_pass("RES_WD_PASS"), res_az_pass("RES_AZ_PASS"),
-                            s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"),
-                            sec_ded_broken("SEC_DED_BROKEN", 0.1)
+    SC_CTOR(DRAM_SEC_DED) :
+        I_RES_SBE("I_RES_SBE"),
+        I_RES_DBE("I_RES_DBE"),
+        I_RES_TBE("I_RES_TBE"),
+        I_LAT_SBE("I_LAT_SBE"),
+        I_LAT_DBE("I_LAT_DBE"),
+        I_RES_MBE("I_RES_MBE"),
+        I_RES_WD("I_RES_WD"),
+        I_RES_AZ("I_RES_AZ"),
+        O_RES_SBE("O_RES_SBE"),
+        O_RES_DBE("O_RES_DBE"),
+        O_RES_TBE("O_RES_TBE"),
+        O_RES_MBE("O_RES_MBE"),
+        O_LAT_SBE("O_LAT_SBE"),
+        O_LAT_DBE("O_LAT_DBE"),
+        O_LAT_TBE("O_LAT_TBE"),
+        O_LAT_MBE("O_LAT_MBE"),
+        O_LAT_SEC_DED_BROKEN("O_LAT_SEC_DED_BROKEN"),
+        O_RES_WD("O_RES_WD"),
+        O_RES_AZ("O_RES_AZ"),
+        res_sbe_cov("RES_SBE_COV", 1.0),
+        res_dbe_cov("RES_DBE_COV", 1.0),
+        res_tbe_cov("RES_TBE_COV", 1.0),
+        res_mbe_cov("RES_MBE_COV", 0.5),
+        lat_sbe_cov("LAT_SBE_COV", 1.0),
+        lat_dbe_cov("LAT_DBE_COV", 1.0),
+        res_tbe_split("RES_TBE_SPLIT"),
+        lat_sbe_sum("LAT_SBE_SUM"),
+        lat_dbe_sum("LAT_DBE_SUM"),
+        res_mbe_sum("RES_MBE_SUM"),
+        lat_tbe_pass("LAT_TBE_PASS"),
+        res_wd_pass("RES_WD_PASS"),
+        res_az_pass("RES_AZ_PASS"),
+        s1("s1"),
+        s2("s2"),
+        s3("s3"),
+        s4("s4"),
+        s5("s5"),
+        s6("s6"),
+        s7("s7"),
+        sec_ded_broken("SEC_DED_BROKEN", 0.1)
     {
         res_sbe_cov.input(I_RES_SBE);
         res_dbe_cov.input(I_RES_DBE);
@@ -310,8 +424,10 @@ SC_MODULE(DRAM_SEC_DED)
 
 SC_MODULE(DRAM_SEC_DED_TRIM)
 {
-    sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_RES_MBE, I_LAT_SBE, I_LAT_DBE, I_LAT_TBE, I_LAT_MBE, I_RES_WD, I_RES_AZ;
-    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE, O_LAT_MBE, O_RES_WD, O_RES_AZ;
+    sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_RES_MBE, I_LAT_SBE, I_LAT_DBE, I_LAT_TBE,
+        I_LAT_MBE, I_RES_WD, I_RES_AZ;
+    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE,
+        O_LAT_MBE, O_RES_WD, O_RES_AZ;
 
     split res_sbe_split, res_dbe_split, res_tbe_split, lat_sbe_split, lat_dbe_split, lat_tbe_split;
     sum res_sbe_sum, res_dbe_sum, lat_sbe_sum, lat_dbe_sum;
@@ -319,13 +435,55 @@ SC_MODULE(DRAM_SEC_DED_TRIM)
 
     sc_signal<double> s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
 
-    SC_CTOR(DRAM_SEC_DED_TRIM) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_RES_MBE("I_RES_MBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_LAT_TBE("I_LAT_TBE"), I_LAT_MBE("I_LAT_MBE"), I_RES_WD("I_RES_WD"), I_RES_AZ("I_RES_AZ"),
-                                 O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"), O_LAT_MBE("O_LAT_MBE"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
-                                 res_sbe_split("RES_SBE_SPLIT"), res_dbe_split("RES_DBE_SPLIT"), res_tbe_split("RES_TBE_SPLIT"),
-                                 lat_sbe_split("LAT_SBE_SPLIT"), lat_dbe_split("LAT_DBE_SPLIT"), lat_tbe_split("LAT_TBE_SPLIT"),
-                                 res_sbe_sum("RES_SBE_SUM"), res_dbe_sum("RES_DBE_SUM"), lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"),
-                                 res_tbe_pass("RES_TBE_PASS"), res_mbe_pass("RES_MBE_PASS"), lat_tbe_pass("LAT_TBE_PASS"), res_wd_pass("RES_WD_PASS"), res_az_pass("RES_AZ_PASS"), lat_mbe_pass("LAT_MBE_PASS"),
-                                 s0("s0"), s1("s1"), s2("s2"), s3("s3"), s4("s4"), s5("s5"), s6("s6"), s7("s7"), s8("s8"), s9("s9"), s10("s10"), s11("s11")
+    SC_CTOR(DRAM_SEC_DED_TRIM) :
+        I_RES_SBE("I_RES_SBE"),
+        I_RES_DBE("I_RES_DBE"),
+        I_RES_TBE("I_RES_TBE"),
+        I_RES_MBE("I_RES_MBE"),
+        I_LAT_SBE("I_LAT_SBE"),
+        I_LAT_DBE("I_LAT_DBE"),
+        I_LAT_TBE("I_LAT_TBE"),
+        I_LAT_MBE("I_LAT_MBE"),
+        I_RES_WD("I_RES_WD"),
+        I_RES_AZ("I_RES_AZ"),
+        O_RES_SBE("O_RES_SBE"),
+        O_RES_DBE("O_RES_DBE"),
+        O_RES_TBE("O_RES_TBE"),
+        O_RES_MBE("O_RES_MBE"),
+        O_LAT_SBE("O_LAT_SBE"),
+        O_LAT_DBE("O_LAT_DBE"),
+        O_LAT_TBE("O_LAT_TBE"),
+        O_LAT_MBE("O_LAT_MBE"),
+        O_RES_WD("O_RES_WD"),
+        O_RES_AZ("O_RES_AZ"),
+        res_sbe_split("RES_SBE_SPLIT"),
+        res_dbe_split("RES_DBE_SPLIT"),
+        res_tbe_split("RES_TBE_SPLIT"),
+        lat_sbe_split("LAT_SBE_SPLIT"),
+        lat_dbe_split("LAT_DBE_SPLIT"),
+        lat_tbe_split("LAT_TBE_SPLIT"),
+        res_sbe_sum("RES_SBE_SUM"),
+        res_dbe_sum("RES_DBE_SUM"),
+        lat_sbe_sum("LAT_SBE_SUM"),
+        lat_dbe_sum("LAT_DBE_SUM"),
+        res_tbe_pass("RES_TBE_PASS"),
+        res_mbe_pass("RES_MBE_PASS"),
+        lat_tbe_pass("LAT_TBE_PASS"),
+        res_wd_pass("RES_WD_PASS"),
+        res_az_pass("RES_AZ_PASS"),
+        lat_mbe_pass("LAT_MBE_PASS"),
+        s0("s0"),
+        s1("s1"),
+        s2("s2"),
+        s3("s3"),
+        s4("s4"),
+        s5("s5"),
+        s6("s6"),
+        s7("s7"),
+        s8("s8"),
+        s9("s9"),
+        s10("s10"),
+        s11("s11")
     {
         res_sbe_split.input(I_RES_SBE);
         res_dbe_split.input(I_RES_DBE);
@@ -334,23 +492,23 @@ SC_MODULE(DRAM_SEC_DED_TRIM)
         lat_dbe_split.input(I_LAT_DBE);
         lat_tbe_split.input(I_LAT_TBE);
 
-        res_sbe_split.outputs.bind(s0,0.89);
+        res_sbe_split.outputs.bind(s0, 0.89);
 
-        res_dbe_split.outputs.bind(s1,0.20);
-        res_dbe_split.outputs.bind(s2,0.79);
+        res_dbe_split.outputs.bind(s1, 0.20);
+        res_dbe_split.outputs.bind(s2, 0.79);
 
-        res_tbe_split.outputs.bind(s3,0.03);
-        res_tbe_split.outputs.bind(s4,0.27);
-        res_tbe_split.outputs.bind(s5,0.70);
+        res_tbe_split.outputs.bind(s3, 0.03);
+        res_tbe_split.outputs.bind(s4, 0.27);
+        res_tbe_split.outputs.bind(s5, 0.70);
 
-        lat_sbe_split.outputs.bind(s6,0.89);
+        lat_sbe_split.outputs.bind(s6, 0.89);
 
-        lat_dbe_split.outputs.bind(s7,0.20);
-        lat_dbe_split.outputs.bind(s8,0.79);
+        lat_dbe_split.outputs.bind(s7, 0.20);
+        lat_dbe_split.outputs.bind(s8, 0.79);
 
-        lat_tbe_split.outputs.bind(s9,0.03);
-        lat_tbe_split.outputs.bind(s10,0.27);
-        lat_tbe_split.outputs.bind(s11,0.70);
+        lat_tbe_split.outputs.bind(s9, 0.03);
+        lat_tbe_split.outputs.bind(s10, 0.27);
+        lat_tbe_split.outputs.bind(s11, 0.70);
 
         res_sbe_sum.inputs.bind(s0);
         res_sbe_sum.inputs.bind(s1);
@@ -401,8 +559,11 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
 
     SC_HAS_PROCESS(ALL_OTHER_COMPONENTS);
     ALL_OTHER_COMPONENTS(sc_module_name name, double OTHER_COMPONENTS) :
-        s0("s0"), s1("s1"), s2("s2"),
-        OTHER_RES("OTHER_RES"), OTHER_LAT("OTHER_LAT"),
+        s0("s0"),
+        s1("s1"),
+        s2("s2"),
+        OTHER_RES("OTHER_RES"),
+        OTHER_LAT("OTHER_LAT"),
         other_split("OTHER_SPLIT"),
         other_cov("OTHER_COV", 0.9),
         other_cov_lat("OTHER_COV_LAT", 1.0),
@@ -419,7 +580,7 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
     }
 };
 
-int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *sc_argv[])
+int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * sc_argv[])
 {
     double DRAM_FIT = 2300.0;
     double OTHER_COMPONENTS = 1920.0;
@@ -431,7 +592,7 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     DRAM_SEC_DED_TRIM sec_ded_trim("DRAM_SEC_DED_TRIM");
     ALL_OTHER_COMPONENTS all_other_components("ALL_OTHER_COMPONENTS", OTHER_COMPONENTS);
     sum residual("RESIDUAL"), latent("LATENT");
-    asil calculate_asil("ASIL", DRAM_FIT+OTHER_COMPONENTS);
+    asil calculate_asil("ASIL", DRAM_FIT + OTHER_COMPONENTS);
 
     sc_signal<double> a1("a1"), a2("a2"), a3("a3"), a4("a4");
 
@@ -445,7 +606,8 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     sec_ecc.I_MBE.bind(a3);
     sec_ecc.I_WD.bind(a4);
 
-    sc_signal<double> b1("b1"), b2("b2"), b3("b3"), b4("b4"), b5("b5"), b6("b6"), b7("b7"), b8("b8");
+    sc_signal<double> b1("b1"), b2("b2"), b3("b3"), b4("b4"), b5("b5"), b6("b6"), b7("b7"),
+        b8("b8");
 
     sec_ecc.O_RES_SBE.bind(b1);
     sec_ecc.O_RES_DBE.bind(b2);
@@ -482,7 +644,8 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     bus_trim.I_RES_MBE.bind(c6);
     bus_trim.I_RES_WD.bind(c7);
 
-    sc_signal<double> d1("d1"), d2("d2"), d3("d3"), d4("d4"), d5("d5"), d6("d6"), d7("d7"), d8("d8"), d9("d9");
+    sc_signal<double> d1("d1"), d2("d2"), d3("d3"), d4("d4"), d5("d5"), d6("d6"), d7("d7"),
+        d8("d8"), d9("d9");
 
     bus_trim.O_RES_SBE.bind(d1);
     bus_trim.O_RES_DBE.bind(d2);
@@ -503,7 +666,8 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     sec_ded.I_RES_WD.bind(d8);
     sec_ded.I_RES_AZ.bind(d9);
 
-    sc_signal<double> e1("e1"), e2("e2"), e3("e3"), e4("e4"), e5("e5"), e6("e6"), e7("e7"), e8("e8"), e9("e9"), e10("e10");
+    sc_signal<double> e1("e1"), e2("e2"), e3("e3"), e4("e4"), e5("e5"), e6("e6"), e7("e7"),
+        e8("e8"), e9("e9"), e10("e10");
 
     sec_ded.O_RES_SBE.bind(e1);
     sec_ded.O_RES_DBE.bind(e2);
@@ -527,7 +691,8 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     sec_ded_trim.I_RES_AZ.bind(e9);
     sec_ded_trim.I_LAT_MBE.bind(e10);
 
-    sc_signal<double> f1("f1"), f2("f2"), f3("f3"), f4("f4"), f5("f5"), f6("f6"), f7("f7"), f8("f8"), f9("f9"), f10("f10"), f11("f11"), f12("f12");
+    sc_signal<double> f1("f1"), f2("f2"), f3("f3"), f4("f4"), f5("f5"), f6("f6"), f7("f7"),
+        f8("f8"), f9("f9"), f10("f10"), f11("f11"), f12("f12");
 
     sec_ded_trim.O_RES_SBE.bind(f1);
     sec_ded_trim.O_RES_DBE.bind(f2);
@@ -601,26 +766,26 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     std::cout << "D: LAT_DBE: " << d5 << std::endl;
     std::cout << "D: LAT_DED: " << d6 << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "E: RES_SBE: " << e1  << std::endl;
-    std::cout << "E: RES_DBE: " << e2  << std::endl;
-    std::cout << "E: RES_TBE: " << e3  << std::endl;
-    std::cout << "E: RES_MBE: " << e4  << std::endl;
-    std::cout << "E: RES_WD:  " << e8  << std::endl;
-    std::cout << "E: RES_AZ:  " << e9  << std::endl;
-    std::cout << "E: LAT_SBE: " << e5  << std::endl;
-    std::cout << "E: LAT_DBE: " << e6  << std::endl;
-    std::cout << "E: LAT_TBE: " << e7  << std::endl;
+    std::cout << "E: RES_SBE: " << e1 << std::endl;
+    std::cout << "E: RES_DBE: " << e2 << std::endl;
+    std::cout << "E: RES_TBE: " << e3 << std::endl;
+    std::cout << "E: RES_MBE: " << e4 << std::endl;
+    std::cout << "E: RES_WD:  " << e8 << std::endl;
+    std::cout << "E: RES_AZ:  " << e9 << std::endl;
+    std::cout << "E: LAT_SBE: " << e5 << std::endl;
+    std::cout << "E: LAT_DBE: " << e6 << std::endl;
+    std::cout << "E: LAT_TBE: " << e7 << std::endl;
     std::cout << "E: LAT_MBE: " << e10 << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "F: RES_SBE: " << f1  << std::endl;
-    std::cout << "F: RES_DBE: " << f2  << std::endl;
-    std::cout << "F: RES_TBE: " << f3  << std::endl;
-    std::cout << "F: RES_MBE: " << f4  << std::endl;
-    std::cout << "F: RES_WD:  " << f8  << std::endl;
-    std::cout << "F: RES_AZ:  " << f9  << std::endl;
-    std::cout << "F: LAT_SBE: " << f5  << std::endl;
-    std::cout << "F: LAT_DBE: " << f6  << std::endl;
-    std::cout << "F: LAT_TBE: " << f7  << std::endl;
+    std::cout << "F: RES_SBE: " << f1 << std::endl;
+    std::cout << "F: RES_DBE: " << f2 << std::endl;
+    std::cout << "F: RES_TBE: " << f3 << std::endl;
+    std::cout << "F: RES_MBE: " << f4 << std::endl;
+    std::cout << "F: RES_WD:  " << f8 << std::endl;
+    std::cout << "F: RES_AZ:  " << f9 << std::endl;
+    std::cout << "F: LAT_SBE: " << f5 << std::endl;
+    std::cout << "F: LAT_DBE: " << f6 << std::endl;
+    std::cout << "F: LAT_TBE: " << f7 << std::endl;
     std::cout << "F: LAT_MBE: " << f10 << std::endl;
     std::cout << "------------------------------ " << std::endl;
     sc_stop();

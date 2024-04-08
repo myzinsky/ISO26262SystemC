@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ Standard")
 FetchContent_Declare(
   systemc
   GIT_REPOSITORY https://github.com/accellera-official/systemc.git
-  GIT_TAG 2.3.4)
+  GIT_TAG 3.0.0)
 
 set(DISABLE_COPYRIGHT_MESSAGE True)
 FetchContent_MakeAvailable(systemc)
@@ -23,18 +23,29 @@ set(gtest_force_shared_crt
     CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable(dram-fta-example examples/dram-fta-example.cpp)
+# Library
+add_library(iso26262systemc INTERFACE)
+add_library(iso26262systemc::iso26262systemc ALIAS iso26262systemc)
 
-target_link_libraries(dram-fta-example PRIVATE SystemC::systemc)
+target_include_directories(iso26262systemc
+    INTERFACE ${CMAKE_SOURCE_DIR}
+)
+
+# Examples
+add_executable(dram-fta-example examples/dram-fta-example.cpp)
+target_link_libraries(dram-fta-example PRIVATE SystemC::systemc iso26262systemc)
 
 add_executable(dram-metrics-example examples/dram-metrics-example.cpp)
+target_link_libraries(dram-metrics-example PRIVATE SystemC::systemc iso26262systemc)
 
-target_link_libraries(dram-metrics-example PRIVATE SystemC::systemc)
+add_executable(dram-metrics-refactored examples/dram-metrics-refactored.cpp)
+target_link_libraries(dram-metrics-refactored PRIVATE SystemC::systemc iso26262systemc)
 
+# Testing
 enable_testing()
 
 add_executable(tests tests/tests.cpp)
-target_link_libraries(tests gtest_main SystemC::systemc)
+target_link_libraries(tests gtest_main SystemC::systemc iso26262systemc)
 
 include(GoogleTest)
 gtest_discover_tests(tests)
