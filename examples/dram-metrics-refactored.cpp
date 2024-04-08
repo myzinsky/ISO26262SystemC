@@ -48,7 +48,6 @@ SC_MODULE(DRAM)
     double E_SBE, E_DBE, E_MBE, E_WD;
 
     DRAM(const sc_module_name& name, double DRAM_FIT) :
-        sc_module(name),
         E_SBE(0.7 * DRAM_FIT),
         E_DBE(0.0748 * DRAM_FIT),
         E_MBE(0.0748 * DRAM_FIT),
@@ -82,7 +81,6 @@ SC_MODULE(DRAM_SEC_ECC)
     basic_event sec_broken;
 
     DRAM_SEC_ECC(const sc_module_name& name) :
-        sc_module(name),
         I_SBE("I_SBE"),
         I_DBE("I_DBE"),
         I_MBE("I_MBE"),
@@ -135,7 +133,6 @@ SC_MODULE(DRAM_SEC_TRIM)
     sc_signal<double> s1, s2, s3, s4, s5, s7, s8;
 
     DRAM_SEC_TRIM(const sc_module_name& name) :
-        sc_module(name),
         I_RES_SBE("I_RES_SBE"),
         I_RES_DBE("I_RES_DBE"),
         I_RES_TBE("I_RES_TBE"),
@@ -224,7 +221,6 @@ SC_MODULE(DRAM_BUS_TRIM)
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
 
     DRAM_BUS_TRIM(const sc_module_name& name, double DRAM_FIT) :
-        sc_module(name),
         I_RES_SBE("I_RES_SBE"),
         I_RES_DBE("I_RES_DBE"),
         I_RES_TBE("I_RES_TBE"),
@@ -331,7 +327,7 @@ SC_MODULE(DRAM_SEC_DED)
     basic_event sec_ded_broken;
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7;
 
-    SC_CTOR(DRAM_SEC_DED) :
+    DRAM_SEC_DED(const sc_core::sc_module_name& name) :
         I_RES_SBE("I_RES_SBE"),
         I_RES_DBE("I_RES_DBE"),
         I_RES_TBE("I_RES_TBE"),
@@ -435,7 +431,7 @@ SC_MODULE(DRAM_SEC_DED_TRIM)
 
     sc_signal<double> s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
 
-    SC_CTOR(DRAM_SEC_DED_TRIM) :
+    DRAM_SEC_DED_TRIM(const sc_module_name& name) :
         I_RES_SBE("I_RES_SBE"),
         I_RES_DBE("I_RES_DBE"),
         I_RES_TBE("I_RES_TBE"),
@@ -557,8 +553,7 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
     coverage other_cov;
     coverage other_cov_lat;
 
-    SC_HAS_PROCESS(ALL_OTHER_COMPONENTS);
-    ALL_OTHER_COMPONENTS(sc_module_name name, double OTHER_COMPONENTS) :
+    ALL_OTHER_COMPONENTS(const sc_module_name& name, double OTHER_COMPONENTS) :
         s0("s0"),
         s1("s1"),
         s2("s2"),
@@ -582,8 +577,9 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
 
 int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * sc_argv[])
 {
-    double DRAM_FIT = 2300.0;
-    double OTHER_COMPONENTS = 1920.0;
+    static constexpr double DRAM_FIT = 2300.0;
+    static constexpr double OTHER_COMPONENTS = 1920.0;
+
     DRAM dram("DRAM", DRAM_FIT);
     DRAM_SEC_ECC sec_ecc("DRAM_SEC_ECC");
     DRAM_SEC_TRIM sec_trim("DRAM_SEC_TRIM");
@@ -591,10 +587,14 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     DRAM_SEC_DED sec_ded("DRAM_SEC_DED");
     DRAM_SEC_DED_TRIM sec_ded_trim("DRAM_SEC_DED_TRIM");
     ALL_OTHER_COMPONENTS all_other_components("ALL_OTHER_COMPONENTS", OTHER_COMPONENTS);
-    sum residual("RESIDUAL"), latent("LATENT");
+    sum residual("RESIDUAL");
+    sum latent("LATENT");
     asil calculate_asil("ASIL", DRAM_FIT + OTHER_COMPONENTS);
 
-    sc_signal<double> a1("a1"), a2("a2"), a3("a3"), a4("a4");
+    sc_signal<double> a1("a1");
+    sc_signal<double> a2("a2");
+    sc_signal<double> a3("a3");
+    sc_signal<double> a4("a4");
 
     dram.SBE.bind(a1);
     dram.DBE.bind(a2);
@@ -606,8 +606,14 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     sec_ecc.I_MBE.bind(a3);
     sec_ecc.I_WD.bind(a4);
 
-    sc_signal<double> b1("b1"), b2("b2"), b3("b3"), b4("b4"), b5("b5"), b6("b6"), b7("b7"),
-        b8("b8");
+    sc_signal<double> b1("b1");
+    sc_signal<double> b2("b2");
+    sc_signal<double> b3("b3");
+    sc_signal<double> b4("b4");
+    sc_signal<double> b5("b5");
+    sc_signal<double> b6("b6");
+    sc_signal<double> b7("b7");
+    sc_signal<double> b8("b8");
 
     sec_ecc.O_RES_SBE.bind(b1);
     sec_ecc.O_RES_DBE.bind(b2);
@@ -626,7 +632,13 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     sec_trim.I_RES_MBE.bind(b7);
     sec_trim.I_RES_WD.bind(b8);
 
-    sc_signal<double> c1("c1"), c2("c2"), c3("c3"), c4("c4"), c5("c5"), c6("c6"), c7("c7");
+    sc_signal<double> c1("c1");
+    sc_signal<double> c2("c2");
+    sc_signal<double> c3("c3");
+    sc_signal<double> c4("c4");
+    sc_signal<double> c5("c5");
+    sc_signal<double> c6("c6");
+    sc_signal<double> c7("c7");
 
     sec_trim.O_RES_SBE.bind(c1);
     sec_trim.O_RES_DBE.bind(c2);
@@ -644,8 +656,15 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     bus_trim.I_RES_MBE.bind(c6);
     bus_trim.I_RES_WD.bind(c7);
 
-    sc_signal<double> d1("d1"), d2("d2"), d3("d3"), d4("d4"), d5("d5"), d6("d6"), d7("d7"),
-        d8("d8"), d9("d9");
+    sc_signal<double> d1("d1");
+    sc_signal<double> d2("d2");
+    sc_signal<double> d3("d3");
+    sc_signal<double> d4("d4");
+    sc_signal<double> d5("d5");
+    sc_signal<double> d6("d6");
+    sc_signal<double> d7("d7");
+    sc_signal<double> d8("d8");
+    sc_signal<double> d9("d9");
 
     bus_trim.O_RES_SBE.bind(d1);
     bus_trim.O_RES_DBE.bind(d2);
@@ -666,8 +685,16 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     sec_ded.I_RES_WD.bind(d8);
     sec_ded.I_RES_AZ.bind(d9);
 
-    sc_signal<double> e1("e1"), e2("e2"), e3("e3"), e4("e4"), e5("e5"), e6("e6"), e7("e7"),
-        e8("e8"), e9("e9"), e10("e10");
+    sc_signal<double> e1("e1");
+    sc_signal<double> e2("e2");
+    sc_signal<double> e3("e3");
+    sc_signal<double> e4("e4");
+    sc_signal<double> e5("e5");
+    sc_signal<double> e6("e6");
+    sc_signal<double> e7("e7");
+    sc_signal<double> e8("e8");
+    sc_signal<double> e9("e9");
+    sc_signal<double> e10("e10");
 
     sec_ded.O_RES_SBE.bind(e1);
     sec_ded.O_RES_DBE.bind(e2);
@@ -691,8 +718,18 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     sec_ded_trim.I_RES_AZ.bind(e9);
     sec_ded_trim.I_LAT_MBE.bind(e10);
 
-    sc_signal<double> f1("f1"), f2("f2"), f3("f3"), f4("f4"), f5("f5"), f6("f6"), f7("f7"),
-        f8("f8"), f9("f9"), f10("f10"), f11("f11"), f12("f12");
+    sc_signal<double> f1("f1");
+    sc_signal<double> f2("f2");
+    sc_signal<double> f3("f3");
+    sc_signal<double> f4("f4");
+    sc_signal<double> f5("f5");
+    sc_signal<double> f6("f6");
+    sc_signal<double> f7("f7");
+    sc_signal<double> f8("f8");
+    sc_signal<double> f9("f9");
+    sc_signal<double> f10("f10");
+    sc_signal<double> f11("f11");
+    sc_signal<double> f12("f12");
 
     sec_ded_trim.O_RES_SBE.bind(f1);
     sec_ded_trim.O_RES_DBE.bind(f2);
@@ -724,7 +761,8 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     latent.inputs.bind(f10);
     latent.inputs.bind(f12);
 
-    sc_signal<double> latent_result("latent_result"), residual_result("residual_result");
+    sc_signal<double> latent_result("latent_result");
+    sc_signal<double> residual_result("residual_result");
 
     residual.output.bind(residual_result);
     latent.output.bind(latent_result);
