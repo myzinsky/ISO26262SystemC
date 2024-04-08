@@ -623,6 +623,7 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     std::cout << "F: LAT_TBE: " << f7  << std::endl;
     std::cout << "F: LAT_MBE: " << f10 << std::endl;
     std::cout << "------------------------------ " << std::endl;
+    sc_stop();
 
     return 0;
 }
