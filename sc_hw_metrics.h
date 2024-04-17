@@ -188,8 +188,8 @@ namespace sc_hw_metrics {
         }
 
         void compute() {
-            spfm = 100*(1-(residual/(total)));
-            lfm = 100*(1-(latent/(total-residual)));
+            spfm = 100 * (1 - (residual / (total)));
+            lfm = 100 * (1 - (latent / (total - residual)));
 
             asil_level = "QM";
 
@@ -211,12 +211,13 @@ namespace sc_hw_metrics {
         }
 
         void end_of_simulation() override {
-            std::cout << "RES:  " << residual   << std::endl;
-            std::cout << "LAT:  " << latent     << std::endl;
-            std::cout << "SPFM: " << spfm       << "%" << std::endl;
-            std::cout << "LFM:  " << lfm        << "%" << std::endl;
-            std::cout << "ASIL: " << asil_level << std::endl;
-            std::cout << "Time:" << sc_core::sc_time_stamp() << " Deltas:" << sc_core::sc_delta_count() << std::endl;
+            std::cout << "RES:   " << residual   << std::endl;
+            std::cout << "LAT:   " << latent     << std::endl;
+            std::cout << "TOTAL: " << total      << std::endl;
+            std::cout << "SPFM:  " << spfm       << "%" << std::endl;
+            std::cout << "LFM:   " << lfm        << "%" << std::endl;
+            std::cout << "ASIL:  " << asil_level << std::endl;
+            std::cout << "Time:  " << sc_core::sc_time_stamp() << " Deltas:" << sc_core::sc_delta_count() << std::endl;
         }
     };
 }

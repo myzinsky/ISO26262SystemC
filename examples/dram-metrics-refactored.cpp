@@ -441,13 +441,13 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
         OTHER_RES("OTHER_RES"),
         OTHER_LAT("OTHER_LAT"),
         other_split("OTHER_SPLIT"),
-        other_cov("OTHER_COV", 0.9, 1.0), // TODO unklar was das überhaupt ist
+        other_cov("OTHER_COV", 0.9, 1.0), // Internal coverages of other components
         all_other("ALL_OTHER", OTHER_COMPONENTS)
     {
         all_other.output.bind(s0);
         other_split.input(s0);
         other_cov.input.bind(s1);
-        other_split.outputs.bind(s1, 0.5);
+        other_split.outputs.bind(s1, 0.5); // safe faults?
         other_cov.output(OTHER_RES);
         other_cov.latent(OTHER_LAT);
     }
@@ -457,6 +457,7 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
 {
     static constexpr double DRAM_FIT = 2300.0;
     static constexpr double OTHER_COMPONENTS = 1920.0;
+    static constexpr double TOTAL = DRAM_FIT + OTHER_COMPONENTS;
 
     DRAM dram("DRAM", DRAM_FIT);
     DRAM_SEC_ECC sec_ecc("DRAM_SEC_ECC");
@@ -467,7 +468,7 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     ALL_OTHER_COMPONENTS all_other_components("ALL_OTHER_COMPONENTS", OTHER_COMPONENTS);
     sum residual("RESIDUAL");
     sum latent("LATENT");
-    asil calculate_asil("ASIL", DRAM_FIT + OTHER_COMPONENTS);
+    asil calculate_asil("ASIL", TOTAL);
 
     // DRAM
     sc_signal<double> dram_res_sbe("dram_res_sbe");
@@ -632,54 +633,56 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
 
     sc_start();
 
-    std::cout << "A: RES_SBE: " << dram_res_sbe << std::endl;
-    std::cout << "A: RES_DBE: " << dram_res_dbe << std::endl;
-    std::cout << "A: RES_MBE: " << dram_res_mbe << std::endl;
-    std::cout << "A: RES_WD:  " << dram_res_wd << std::endl;
+    std::cout << "DRAM: RES_SBE: " << dram_res_sbe << std::endl;
+    std::cout << "DRAM: RES_DBE: " << dram_res_dbe << std::endl;
+    std::cout << "DRAM: RES_MBE: " << dram_res_mbe << std::endl;
+    std::cout << "DRAM: RES_WD:  " << dram_res_wd << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "B: RES_SBE: " << sec_ecc_lat_sec_broken << std::endl;
-    std::cout << "B: RES_DBE: " << sec_ecc_lat_sec_broken << std::endl;
-    std::cout << "B: RES_TBE: " << sec_ecc_lat_sec_broken << std::endl;
-    std::cout << "B: RES_MBE: " << sec_ecc_lat_sec_broken << std::endl;
-    std::cout << "B: RES_WD:  " << sec_ecc_lat_sec_broken << std::endl;
-    std::cout << "B: LAT_SBE: " << sec_ecc_lat_sec_broken << std::endl;
-    std::cout << "B: LAT_DBE: " << sec_ecc_lat_sec_broken << std::endl;
-    std::cout << "B: LAT_SEC: " << sec_ecc_lat_sec_broken << std::endl;
+    std::cout << "SEC: RES_SBE: " << sec_ecc_res_sbe << std::endl;
+    std::cout << "SEC: RES_DBE: " << sec_ecc_res_dbe << std::endl;
+    std::cout << "SEC: RES_TBE: " << sec_ecc_res_tbe << std::endl;
+    std::cout << "SEC: RES_MBE: " << sec_ecc_res_mbe << std::endl;
+    std::cout << "SEC: RES_WD:  " << sec_ecc_res_wd << std::endl;
+    std::cout << "SEC: LAT_SBE: " << sec_ecc_lat_sbe << std::endl;
+    std::cout << "SEC: LAT_SEC: " << sec_ecc_lat_sec_broken << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "C: RES_SBE: " << sec_trim_res_sbe << std::endl;
-    std::cout << "C: RES_DBE: " << sec_trim_res_dbe << std::endl;
-    std::cout << "C: RES_TBE: " << sec_trim_res_tbe << std::endl;
-    std::cout << "C: RES_MBE: " << sec_trim_res_mbe << std::endl;
-    std::cout << "C: RES_WD:  " << sec_trim_res_wd << std::endl;
+    std::cout << "DRAM-TRIM: RES_SBE: " << sec_trim_res_sbe << std::endl;
+    std::cout << "DRAM-TRIM: RES_DBE: " << sec_trim_res_dbe << std::endl;
+    std::cout << "DRAM-TRIM: RES_TBE: " << sec_trim_res_tbe << std::endl;
+    std::cout << "DRAM-TRIM: RES_MBE: " << sec_trim_res_mbe << std::endl;
+    std::cout << "DRAM-TRIM: RES_WD:  " << sec_trim_res_wd << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "D: RES_SBE: " << bus_trim_res_sbe << std::endl;
-    std::cout << "D: RES_DBE: " << bus_trim_res_dbe << std::endl;
-    std::cout << "D: RES_TBE: " << bus_trim_res_tbe << std::endl;
-    std::cout << "D: RES_MBE: " << bus_trim_res_mbe << std::endl;
-    std::cout << "D: RES_WD:  " << bus_trim_res_wd << std::endl;
-    std::cout << "D: RES_AZ:  " << bus_trim_res_az << std::endl;
+    std::cout << "BUS-TRIM: RES_SBE: " << bus_trim_res_sbe << std::endl;
+    std::cout << "BUS-TRIM: RES_DBE: " << bus_trim_res_dbe << std::endl;
+    std::cout << "BUS-TRIM: RES_TBE: " << bus_trim_res_tbe << std::endl;
+    std::cout << "BUS-TRIM: RES_MBE: " << bus_trim_res_mbe << std::endl;
+    std::cout << "BUS-TRIM: RES_WD:  " << bus_trim_res_wd << std::endl;
+    std::cout << "BUS-TRIM: RES_AZ:  " << bus_trim_res_az << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "E: RES_SBE: " << sec_ded_res_sbe << std::endl;
-    std::cout << "E: RES_DBE: " << sec_ded_res_dbe << std::endl;
-    std::cout << "E: RES_TBE: " << sec_ded_res_tbe << std::endl;
-    std::cout << "E: RES_MBE: " << sec_ded_res_mbe << std::endl;
-    std::cout << "E: RES_WD:  " << sec_ded_res_wd << std::endl;
-    std::cout << "E: RES_AZ:  " << sec_ded_res_az << std::endl;
-    std::cout << "E: LAT_SBE: " << sec_ded_lat_sbe << std::endl;
-    std::cout << "E: LAT_DBE: " << sec_ded_lat_dbe << std::endl;
-    std::cout << "E: LAT_TBE: " << sec_ded_lat_tbe << std::endl;
-    std::cout << "E: LAT_MBE: " << sec_ded_lat_mbe << std::endl;
-    std::cout << "E: LAT_SDB: " << sec_ded_lat_sec_ded_broken << std::endl;
+    std::cout << "SEC-DED: RES_SBE: " << sec_ded_res_sbe << std::endl;
+    std::cout << "SEC-DED: RES_DBE: " << sec_ded_res_dbe << std::endl;
+    std::cout << "SEC-DED: RES_TBE: " << sec_ded_res_tbe << std::endl;
+    std::cout << "SEC-DED: RES_MBE: " << sec_ded_res_mbe << std::endl;
+    std::cout << "SEC-DED: RES_WD:  " << sec_ded_res_wd << std::endl;
+    std::cout << "SEC-DED: RES_AZ:  " << sec_ded_res_az << std::endl;
+    std::cout << "SEC-DED: LAT_SBE: " << sec_ded_lat_sbe << std::endl;
+    std::cout << "SEC-DED: LAT_DBE: " << sec_ded_lat_dbe << std::endl;
+    std::cout << "SEC-DED: LAT_TBE: " << sec_ded_lat_tbe << std::endl;
+    std::cout << "SEC-DED: LAT_MBE: " << sec_ded_lat_mbe << std::endl;
+    std::cout << "SEC-DED: LAT_SDB: " << sec_ded_lat_sec_ded_broken << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "F: RES_SBE: " << sec_ded_trim_res_sbe << std::endl;
-    std::cout << "F: RES_DBE: " << sec_ded_trim_res_dbe << std::endl;
-    std::cout << "F: RES_TBE: " << sec_ded_trim_res_tbe << std::endl;
-    std::cout << "F: RES_MBE: " << sec_ded_trim_res_mbe << std::endl;
-    std::cout << "F: RES_WD:  " << sec_ded_trim_res_wd << std::endl;
-    std::cout << "F: RES_AZ:  " << sec_ded_trim_res_az << std::endl;
+    std::cout << "SEC-DED-TRIM: RES_SBE: " << sec_ded_trim_res_sbe << std::endl;
+    std::cout << "SEC-DED-TRIM: RES_DBE: " << sec_ded_trim_res_dbe << std::endl;
+    std::cout << "SEC-DED-TRIM: RES_TBE: " << sec_ded_trim_res_tbe << std::endl;
+    std::cout << "SEC-DED-TRIM: RES_MBE: " << sec_ded_trim_res_mbe << std::endl;
+    std::cout << "SEC-DED-TRIM: RES_WD:  " << sec_ded_trim_res_wd << std::endl;
+    std::cout << "SEC-DED-TRIM: RES_AZ:  " << sec_ded_trim_res_az << std::endl;
     std::cout << "------------------------------ " << std::endl;
-    std::cout << "G: RES_SUM: " << residual_result << std::endl;
-    std::cout << "G: LAT_SUM: " << latent_result << std::endl;
+    std::cout << "OTHER: RES: " << all_other_components_res << std::endl;
+    std::cout << "OTHER: LAT: " << all_other_components_lat << std::endl;
+    std::cout << "------------------------------ " << std::endl;
+    std::cout << "TOTAL: RES_SUM: " << residual_result << std::endl;
+    std::cout << "TOTAL: LAT_SUM: " << latent_result << std::endl;
     std::cout << "------------------------------ " << std::endl;
     sc_stop();
 
