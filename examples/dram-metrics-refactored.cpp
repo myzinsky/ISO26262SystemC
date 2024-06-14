@@ -163,7 +163,7 @@ SC_MODULE(DRAM_SEC_TRIM)
         res_dbe_split.outputs.bind(s2, 0.11);
         res_dbe_split.outputs.bind(s3, 0.89);
 
-        res_tbe_split.outputs.bind(s4, 0.009);
+        res_tbe_split.outputs.bind(s4, 0.009); // TODO does not add up to one
         res_tbe_split.outputs.bind(s5, 0.15);
         res_tbe_split.outputs.bind(O_RES_TBE, 0.83);
 
@@ -187,14 +187,15 @@ SC_MODULE(DRAM_SEC_TRIM)
 SC_MODULE(DRAM_BUS_TRIM)
 {
     sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_RES_MBE, I_RES_WD;
-    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_RES_WD, O_RES_AZ;
+    sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_RES_WD, O_RES_AZ, O_LAT_IF, O_LAT_LB;
 
     split res_sbe_split, res_dbe_split, res_tbe_split;
     sum res_sbe_sum, res_dbe_sum, res_mbe_sum;
+    coverage if_sbe_coverage;
     pass res_tbe_pass, res_wd_pass;
-    basic_event dq_upset, all_zero;
+    basic_event if_sbe, link_ecc_broken, all_zero;
 
-    sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
+    sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11;
 
     DRAM_BUS_TRIM(const sc_module_name& name, double DRAM_FIT) :
         I_RES_SBE("I_RES_SBE"),
@@ -208,6 +209,8 @@ SC_MODULE(DRAM_BUS_TRIM)
         O_RES_MBE("O_RES_MBE"),
         O_RES_WD("O_RES_WD"),
         O_RES_AZ("O_RES_AZ"),
+        O_LAT_IF("O_LAT_IF"),
+        O_LAT_LB("O_LAT_LB"),
         res_sbe_split("RES_SBE_SPLIT"),
         res_dbe_split("RES_DBE_SPLIT"),
         res_tbe_split("RES_TBE_SPLIT"),
@@ -216,6 +219,7 @@ SC_MODULE(DRAM_BUS_TRIM)
         res_mbe_sum("RES_MBE_SUM"),
         res_tbe_pass("RES_TBE_PASS"),
         res_wd_pass("res_wd_pass"),
+        if_sbe_coverage("IF_SBE_COVERAGE", 1.0, 1.0),
         s1("s1"),
         s2("s2"),
         s3("s3"),
@@ -226,7 +230,9 @@ SC_MODULE(DRAM_BUS_TRIM)
         s8("s8"),
         s9("s9"),
         s10("s10"),
-        dq_upset("DQ_UPSET", 0.001 * DRAM_FIT),
+        s11("s11"),
+        if_sbe("IF_SBE", 5e9),
+        link_ecc_broken("LINK_ECC_BROKEN", 0.1),
         all_zero("ALL_ZERO", 0.0748 * DRAM_FIT)
     {
         res_sbe_split.input(I_RES_SBE);
@@ -254,10 +260,15 @@ SC_MODULE(DRAM_BUS_TRIM)
         res_tbe_pass.input(s6);
         res_tbe_pass.output(O_RES_TBE);
 
-        dq_upset.output(s10);
+        if_sbe.output(s10);
+        if_sbe_coverage.input(s10);
+        if_sbe_coverage.output(s11);
+        if_sbe_coverage.latent(O_LAT_IF);
+
+        link_ecc_broken.output(O_LAT_LB);
 
         res_mbe_sum.inputs(I_RES_MBE);
-        res_mbe_sum.inputs(s10);
+        res_mbe_sum.inputs(s11);
         res_mbe_sum.output(O_RES_MBE);
 
         res_wd_pass.input(I_RES_WD);
@@ -453,11 +464,11 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
     }
 };
 
-int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * sc_argv[])
+int sc_main(int argc, char *argv[])
 {
-    static constexpr double DRAM_FIT = 2300.0;
-    static constexpr double OTHER_COMPONENTS = 1920.0;
-    static constexpr double TOTAL = DRAM_FIT + OTHER_COMPONENTS;
+    double DRAM_FIT = (argc == 1) ? 2300.0 : std::stod(argv[1]);
+    double OTHER_COMPONENTS = 1920.0;
+    double TOTAL = DRAM_FIT + OTHER_COMPONENTS;
 
     DRAM dram("DRAM", DRAM_FIT);
     DRAM_SEC_ECC sec_ecc("DRAM_SEC_ECC");
@@ -535,6 +546,8 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     sc_signal<double> bus_trim_res_mbe("bus_trim_res_mbe");
     sc_signal<double> bus_trim_res_wd("bus_trim_res_wd");
     sc_signal<double> bus_trim_res_az("bus_trim_res_az");
+    sc_signal<double> bus_trim_lat_if("bus_trim_lat_if");
+    sc_signal<double> bus_trim_lat_lb("bus_trim_lat_lb");
 
     bus_trim.O_RES_SBE.bind(bus_trim_res_sbe);
     bus_trim.O_RES_DBE.bind(bus_trim_res_dbe);
@@ -542,6 +555,8 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     bus_trim.O_RES_MBE.bind(bus_trim_res_mbe);
     bus_trim.O_RES_WD.bind(bus_trim_res_wd);
     bus_trim.O_RES_AZ.bind(bus_trim_res_az);
+    bus_trim.O_LAT_IF.bind(bus_trim_lat_if);
+    bus_trim.O_LAT_LB.bind(bus_trim_lat_lb);
 
     // SEC-DED
     sec_ded.I_RES_SBE.bind(bus_trim_res_sbe);
@@ -620,6 +635,8 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     latent.inputs.bind(sec_ded_lat_tbe);
     latent.inputs.bind(sec_ded_lat_mbe);
     latent.inputs.bind(sec_ded_lat_sec_ded_broken);
+    latent.inputs.bind(bus_trim_lat_if);
+    latent.inputs.bind(bus_trim_lat_lb);
     latent.inputs.bind(all_other_components_lat);
 
     sc_signal<double> latent_result("latent_result");
@@ -658,6 +675,8 @@ int sc_main(int __attribute__((unused)) sc_argc, char __attribute__((unused)) * 
     std::cout << "BUS-TRIM: RES_MBE: " << bus_trim_res_mbe << std::endl;
     std::cout << "BUS-TRIM: RES_WD:  " << bus_trim_res_wd << std::endl;
     std::cout << "BUS-TRIM: RES_AZ:  " << bus_trim_res_az << std::endl;
+    std::cout << "BUS-TRIM: LAT_IF:  " << bus_trim_lat_if << std::endl;
+    std::cout << "BUS-TRIM: LAT_LB:  " << bus_trim_lat_lb << std::endl;
     std::cout << "------------------------------ " << std::endl;
     std::cout << "SEC-DED: RES_SBE: " << sec_ded_res_sbe << std::endl;
     std::cout << "SEC-DED: RES_DBE: " << sec_ded_res_dbe << std::endl;

@@ -44,7 +44,6 @@ SC_MODULE(DRAM)
     sc_out<double> SBE, DBE, MBE, WD;
     double E_SBE, E_DBE, E_MBE, E_WD;
 
-    SC_HAS_PROCESS(DRAM);
     DRAM(sc_module_name name, double DRAM_FIT) :
         E_SBE(0.7*DRAM_FIT), E_DBE(0.0748*DRAM_FIT), E_MBE(0.0748*DRAM_FIT), E_WD(0.0748*DRAM_FIT),
         SBE("SBE"), DBE("DBE"), MBE("MBE"), WD("WD")
@@ -174,7 +173,6 @@ SC_MODULE(DRAM_BUS_TRIM)
 
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
 
-    SC_HAS_PROCESS(DRAM_BUS_TRIM);
     DRAM_BUS_TRIM(sc_module_name name, double DRAM_FIT) :
         I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"),
         O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
@@ -399,7 +397,6 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
     coverage other_cov;
     coverage other_cov_lat;
 
-    SC_HAS_PROCESS(ALL_OTHER_COMPONENTS);
     ALL_OTHER_COMPONENTS(sc_module_name name, double OTHER_COMPONENTS) :
         s0("s0"), s1("s1"), s2("s2"),
         OTHER_RES("OTHER_RES"), OTHER_LAT("OTHER_LAT"),
