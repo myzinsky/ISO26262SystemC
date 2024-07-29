@@ -10,7 +10,7 @@ lfm_regex = "LFM:   (([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[Ee]([+-]?\d+))?)%"
 
 result_dict = {}
 
-for dram_fit in np.logspace(0, 4, num=20):
+for dram_fit in np.logspace(-2, 4, num=20):
     proc = subprocess.run(['build/dram-metrics-refactored', str(dram_fit)], stdout=subprocess.PIPE)
     output = proc.stdout.decode('utf-8')
 

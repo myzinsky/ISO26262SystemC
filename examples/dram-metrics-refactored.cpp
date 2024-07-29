@@ -308,8 +308,8 @@ SC_MODULE(DRAM_SEC_DED)
     DRAM_SEC_DED(const sc_core::sc_module_name& name) :
         res_sbe_cov("RES_SBE_COV", 1.0, 1.0),
         res_dbe_cov("RES_DBE_COV", 1.0, 1.0),
-        res_tbe_cov("RES_TBE_COV", 1.0, 1.0), // TODO: unklar ob dieser coverage block korrekt ist oder nicht eher ein split hierhin muss
-        res_mbe_cov("RES_MBE_COV", 0.5, 1.0), // TODO: unklar welcher wert
+        res_tbe_cov("RES_TBE_COV", 1.0, 1.0),
+        res_mbe_cov("RES_MBE_COV", 0.5, 0.5),
         res_tbe_split("RES_TBE_SPLIT"),
         res_mbe_sum("RES_MBE_SUM"),
         res_wd_pass("RES_WD_PASS"),
@@ -452,7 +452,7 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
         OTHER_RES("OTHER_RES"),
         OTHER_LAT("OTHER_LAT"),
         other_split("OTHER_SPLIT"),
-        other_cov("OTHER_COV", 0.9, 1.0), // Internal coverages of other components
+        other_cov("OTHER_COV", 0.99, 1.0), // Internal coverages of other components
         all_other("ALL_OTHER", OTHER_COMPONENTS)
     {
         all_other.output.bind(s0);
@@ -467,7 +467,7 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
 int sc_main(int argc, char *argv[])
 {
     double DRAM_FIT = (argc == 1) ? 2300.0 : std::stod(argv[1]);
-    double OTHER_COMPONENTS = 1920.0;
+    double OTHER_COMPONENTS = 1900.0;
     double TOTAL = DRAM_FIT + OTHER_COMPONENTS;
 
     DRAM dram("DRAM", DRAM_FIT);
