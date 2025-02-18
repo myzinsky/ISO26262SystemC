@@ -44,7 +44,6 @@ SC_MODULE(DRAM)
     sc_out<double> SBE, DBE, MBE, WD;
     double E_SBE, E_DBE, E_MBE, E_WD;
 
-    SC_HAS_PROCESS(DRAM);
     DRAM(sc_module_name name, double DRAM_FIT) :
         E_SBE(0.7*DRAM_FIT), E_DBE(0.0748*DRAM_FIT), E_MBE(0.0748*DRAM_FIT), E_WD(0.0748*DRAM_FIT),
         SBE("SBE"), DBE("DBE"), MBE("MBE"), WD("WD")
@@ -74,7 +73,7 @@ SC_MODULE(DRAM_SEC_ECC)
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"),
                             O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_SEC_BROKEN("O_LAT_SEC_BROKEN"),
                             O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"),
-                            sec_coverage("SEC_Coverage", 1.0),
+                            sec_coverage("SEC_Coverage", 1.0, 1.0 - 1.0),
                             sec_split("SEC_split"),
                             sec_pass("SEC_PASS"), mbe_pass("MBE_PASS"), wd_pass("WD_PASS"),
                             sec_broken("SEC_BROKEN", 0.1)
@@ -94,7 +93,7 @@ SC_MODULE(DRAM_SEC_ECC)
 
         mbe_pass.input(I_MBE);
         mbe_pass.output(O_RES_MBE);
-        
+
         wd_pass.input(I_WD);
         wd_pass.output(O_RES_WD);
     }
@@ -156,7 +155,7 @@ SC_MODULE(DRAM_SEC_TRIM)
 
         mbe_pass.input(I_RES_MBE);
         mbe_pass.output(O_RES_MBE);
-        
+
         wd_pass.input(I_RES_WD);
         wd_pass.output(O_RES_WD);
     }
@@ -174,7 +173,6 @@ SC_MODULE(DRAM_BUS_TRIM)
 
     sc_signal<double> s1, s2, s3, s4, s5, s6, s7, s8, s9, s10;
 
-    SC_HAS_PROCESS(DRAM_BUS_TRIM);
     DRAM_BUS_TRIM(sc_module_name name, double DRAM_FIT) :
         I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"),
         O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_RES_MBE("O_RES_MBE"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
@@ -237,7 +235,7 @@ SC_MODULE(DRAM_BUS_TRIM)
     }
 };
 
-SC_MODULE(DRAM_SEC_DED) 
+SC_MODULE(DRAM_SEC_DED)
 {
     sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_LAT_SBE, I_LAT_DBE, I_RES_MBE, I_RES_WD, I_RES_AZ;
     sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE, O_LAT_MBE, O_LAT_SEC_DED_BROKEN, O_RES_WD, O_RES_AZ;
@@ -251,8 +249,8 @@ SC_MODULE(DRAM_SEC_DED)
 
     SC_CTOR(DRAM_SEC_DED) : I_RES_SBE("I_RES_SBE"), I_RES_DBE("I_RES_DBE"), I_RES_TBE("I_RES_TBE"), I_LAT_SBE("I_LAT_SBE"), I_LAT_DBE("I_LAT_DBE"), I_RES_MBE("I_RES_MBE"), I_RES_WD("I_RES_WD"), I_RES_AZ("I_RES_AZ"),
                             O_RES_SBE("O_RES_SBE"), O_RES_DBE("O_RES_DBE"), O_RES_TBE("O_RES_TBE"), O_RES_MBE("O_RES_MBE"), O_LAT_SBE("O_LAT_SBE"), O_LAT_DBE("O_LAT_DBE"), O_LAT_TBE("O_LAT_TBE"), O_LAT_MBE("O_LAT_MBE"), O_LAT_SEC_DED_BROKEN("O_LAT_SEC_DED_BROKEN"), O_RES_WD("O_RES_WD"), O_RES_AZ("O_RES_AZ"),
-                            res_sbe_cov("RES_SBE_COV", 1.0), res_dbe_cov("RES_DBE_COV", 1.0), res_tbe_cov("RES_TBE_COV",1.0), res_mbe_cov("RES_MBE_COV",0.5),
-                            lat_sbe_cov("LAT_SBE_COV", 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0),
+                            res_sbe_cov("RES_SBE_COV", 1.0, 1.0 - 1.0), res_dbe_cov("RES_DBE_COV", 1.0, 1.0 - 1.0), res_tbe_cov("RES_TBE_COV",1.0, 1.0 - 1.0), res_mbe_cov("RES_MBE_COV",0.5, 1.0 - 0.5),
+                            lat_sbe_cov("LAT_SBE_COV", 1.0, 1.0 - 1.0), lat_dbe_cov("LAT_DBE_COV", 1.0, 1.0 - 1.0),
                             res_tbe_split("RES_TBE_SPLIT"),
                             lat_sbe_sum("LAT_SBE_SUM"), lat_dbe_sum("LAT_DBE_SUM"), res_mbe_sum("RES_MBE_SUM"),
                             lat_tbe_pass("LAT_TBE_PASS"), res_wd_pass("RES_WD_PASS"), res_az_pass("RES_AZ_PASS"),
@@ -279,7 +277,7 @@ SC_MODULE(DRAM_SEC_DED)
         res_tbe_cov.input(s1);
         lat_sbe_cov.output.bind(s2);
         lat_dbe_cov.output.bind(s3);
-        
+
         res_sbe_cov.latent.bind(s4);
         res_dbe_cov.latent.bind(s5);
 
@@ -308,7 +306,7 @@ SC_MODULE(DRAM_SEC_DED)
     }
 };
 
-SC_MODULE(DRAM_SEC_DED_TRIM) 
+SC_MODULE(DRAM_SEC_DED_TRIM)
 {
     sc_in<double> I_RES_SBE, I_RES_DBE, I_RES_TBE, I_RES_MBE, I_LAT_SBE, I_LAT_DBE, I_LAT_TBE, I_LAT_MBE, I_RES_WD, I_RES_AZ;
     sc_out<double> O_RES_SBE, O_RES_DBE, O_RES_TBE, O_RES_MBE, O_LAT_SBE, O_LAT_DBE, O_LAT_TBE, O_LAT_MBE, O_RES_WD, O_RES_AZ;
@@ -399,13 +397,12 @@ SC_MODULE(ALL_OTHER_COMPONENTS)
     coverage other_cov;
     coverage other_cov_lat;
 
-    SC_HAS_PROCESS(ALL_OTHER_COMPONENTS);
     ALL_OTHER_COMPONENTS(sc_module_name name, double OTHER_COMPONENTS) :
         s0("s0"), s1("s1"), s2("s2"),
         OTHER_RES("OTHER_RES"), OTHER_LAT("OTHER_LAT"),
         other_split("OTHER_SPLIT"),
-        other_cov("OTHER_COV", 0.9),
-        other_cov_lat("OTHER_COV_LAT", 1.0),
+        other_cov("OTHER_COV", 0.9, 1.0 - 0.9),
+        other_cov_lat("OTHER_COV_LAT", 1.0, 1.0 - 1.0),
         all_other("ALL_OTHER", OTHER_COMPONENTS)
     {
         all_other.output.bind(s0);
@@ -623,6 +620,7 @@ int sc_main (int __attribute__((unused)) sc_argc, char __attribute__((unused)) *
     std::cout << "F: LAT_TBE: " << f7  << std::endl;
     std::cout << "F: LAT_MBE: " << f10 << std::endl;
     std::cout << "------------------------------ " << std::endl;
+    sc_stop();
 
     return 0;
 }

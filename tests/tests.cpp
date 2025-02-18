@@ -29,7 +29,7 @@ SC_MODULE(component_and) {
     sc_out<sc_fta::prob> o_prob_1;
 
     SC_CTOR(component_and) : i_prob_1("i_prob_1"), i_prob_2("i_prob_2"), o_prob_1("o_prob_1") {
-        SC_METHOD(compute_prob)
+        SC_METHOD(compute_prob);
         sensitive << i_prob_1 << i_prob_2;
     }
 
@@ -102,7 +102,7 @@ SC_MODULE(component_hierarchy)
     component_not* n;
     component_and* a;
 
-    sc_in<sc_fta::prob>  in1; 
+    sc_in<sc_fta::prob>  in1;
     sc_in<sc_fta::prob>  in2;
     sc_out<sc_fta::prob> out;
 
@@ -161,7 +161,7 @@ TEST(hw_metric, coverage) {
     sc_signal<double> o("o");
     sc_signal<double> l("l");
 
-    sc_hw_metrics::coverage m("m", 0.83);
+    sc_hw_metrics::coverage m("m", 0.83, 1.0 - 0.83);
 
     m.input.bind(i);
     m.output.bind(o);

@@ -34,18 +34,17 @@
  */
 
 #include <iostream>
-#include <systemc.h>
+#include <systemc>
 #include <numeric>
 
 namespace sc_hw_metrics {
 
     SC_MODULE(basic_event)
     {
-        sc_out<double> output;
+        sc_core::sc_out<double> output;
         double rate;
 
-        SC_HAS_PROCESS(basic_event);
-        basic_event(sc_module_name name, double rate) : output("output"),
+        basic_event(const sc_core::sc_module_name& name, double rate) : output("output"),
                                                         rate(rate)
         {
             SC_METHOD(compute_fit);
@@ -58,16 +57,17 @@ namespace sc_hw_metrics {
 
     SC_MODULE(coverage)
     {
-        sc_in<double> input;
-        sc_out<double> output;
-        sc_port<sc_signal_inout_if<double>, 0, SC_ZERO_OR_MORE_BOUND> latent;
+        sc_core::sc_in<double> input;
+        sc_core::sc_out<double> output;
+        sc_core::sc_port<sc_core::sc_signal_inout_if<double>, 0, sc_core::SC_ZERO_OR_MORE_BOUND> latent;
 
         double dc;
+        double lc;
 
-        SC_HAS_PROCESS(coverage);
-        coverage(sc_module_name name, double dc) : input("input"),
+        coverage(const sc_core::sc_module_name& name, double dc, double lc) : input("input"),
                                                    output("output"),
-                                                   dc(dc)
+                                                   dc(dc),
+                                                   lc(lc)
         {
             SC_METHOD(compute_fit);
             sensitive << input;
@@ -77,36 +77,37 @@ namespace sc_hw_metrics {
         {
             output.write(input.read()*(1-dc));
             if(latent.bind_count() != 0) {
-                latent->write(input.read()*dc);
+                latent->write(input.read()*(1-lc));
             }
         }
     };
 
     template <class T>
-    class sc_split_out : public sc_port<sc_signal_inout_if<T>,0,SC_ONE_OR_MORE_BOUND>
+    class sc_split_out : public sc_core::sc_port<sc_core::sc_signal_inout_if<T>,0,sc_core::SC_ONE_OR_MORE_BOUND>
     {
     public:
         std::vector<double> split_rates;
 
-        void bind(sc_interface& interface , double rate)
+        void bind(sc_core::sc_interface& interface , double rate)
         {
-            sc_port_base::bind(interface);
+            sc_core::sc_port_base::bind(interface);
             split_rates.push_back(rate);
         }
 
-        void bind(sc_out<double>& parent, double rate)
+        void bind(sc_core::sc_out<double>& parent, double rate)
         {
-            sc_port_base::bind(parent);
+            sc_core::sc_port_base::bind(parent);
             split_rates.push_back(rate);
         }
     };
 
     SC_MODULE(split)
     {
-        sc_in<double> input;
+        sc_core::sc_in<double> input;
         sc_split_out<double> outputs;
 
-        SC_CTOR(split) : input("input") {
+        split(const sc_core::sc_module_name& name) : sc_module(name), input("input")
+        {
             SC_METHOD(compute_fit);
             sensitive << input;
         }
@@ -119,9 +120,9 @@ namespace sc_hw_metrics {
         }
 
         // Could be used to calculate unseen dormant faults (safe faults)
-        void before_end_of_elaboration() {
+        void before_end_of_elaboration() override {
             double total_rate = 0.0;
-            
+
             for (auto& n : outputs.split_rates) {
                 total_rate += n;
             }
@@ -137,10 +138,11 @@ namespace sc_hw_metrics {
 
     SC_MODULE(sum)
     {
-        sc_port<sc_signal_in_if<double>, 0, SC_ONE_OR_MORE_BOUND> inputs;
-        sc_out<double> output;
+        sc_core::sc_port<sc_core::sc_signal_in_if<double>, 0, sc_core::SC_ONE_OR_MORE_BOUND> inputs;
+        sc_core::sc_out<double> output;
 
-        SC_CTOR(sum) : output("output") {
+        sum(const sc_core::sc_module_name& name) : sc_core::sc_module(name), output("output")
+        {
             SC_METHOD(compute_fit);
             sensitive << inputs;
         }
@@ -154,12 +156,12 @@ namespace sc_hw_metrics {
         }
     };
 
-    SC_MODULE(pass) // TODO: Kann man das nicht durch ein signal lösen? 
+    SC_MODULE(pass) // TODO: Kann man das nicht durch ein signal lösen?
     {
-        sc_in<double> input;
-        sc_out<double> output;
+        sc_core::sc_in<double> input;
+        sc_core::sc_out<double> output;
 
-        SC_CTOR(pass) {
+        pass(const sc_core::sc_module_name& name) : sc_core::sc_module(name) {
             SC_METHOD(compute);
             sensitive << input;
         }
@@ -171,24 +173,23 @@ namespace sc_hw_metrics {
 
     SC_MODULE(asil)
     {
-        sc_in<double> residual;
-        sc_in<double> latent;
+        sc_core::sc_in<double> residual;
+        sc_core::sc_in<double> latent;
 
-        double spfm;
-        double lfm;
+        double spfm{};
+        double lfm{};
         std::string asil_level;
 
         double total;
 
-        SC_HAS_PROCESS(asil);
-        asil(sc_module_name name, double total) : total(total) {
+        asil(const sc_core::sc_module_name& name, double total) : total(total) {
             SC_METHOD(compute);
             sensitive << residual << latent;
         }
 
         void compute() {
-            spfm = 100*(1-(residual/(total)));
-            lfm = 100*(1-(latent/(total-residual)));
+            spfm = 100 * (1 - (residual / (total)));
+            lfm = 100 * (1 - (latent / (total - residual)));
 
             asil_level = "QM";
 
@@ -210,12 +211,13 @@ namespace sc_hw_metrics {
         }
 
         void end_of_simulation() override {
-            std::cout << "RES:  " << residual   << std::endl;
-            std::cout << "LAT:  " << latent     << std::endl;
-            std::cout << "SPFM: " << spfm       << "%" << std::endl;
-            std::cout << "LFM:  " << lfm        << "%" << std::endl;
-            std::cout << "ASIL: " << asil_level << std::endl;
-            std::cout << "Time:" << sc_time_stamp() << " Deltas:" << sc_delta_count() << endl;
+            std::cout << "RES:   " << residual   << std::endl;
+            std::cout << "LAT:   " << latent     << std::endl;
+            std::cout << "TOTAL: " << total      << std::endl;
+            std::cout << "SPFM:  " << spfm       << "%" << std::endl;
+            std::cout << "LFM:   " << lfm        << "%" << std::endl;
+            std::cout << "ASIL:  " << asil_level << std::endl;
+            std::cout << "Time:  " << sc_core::sc_time_stamp() << " Deltas:" << sc_core::sc_delta_count() << std::endl;
         }
     };
 }
